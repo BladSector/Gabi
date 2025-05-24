@@ -1,0 +1,924 @@
+{% extends "base.html" %}
+
+{% block title %}Vista Mozos - Sistema de Restaurante{% endblock %}
+
+{% block content %}
+<!-- Modal para ingresar nombre del mozo -->
+<div class="modal fade" id="nombreMozoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bienvenido al Sistema</h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nombreMozo" class="form-label">Ingrese su nombre</label>
+                    <input type="text" class="form-control" id="nombreMozo" placeholder="Nombre del mozo">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="guardarNombreMozo()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para gestionar pedidos de mesa -->
+<div class="modal fade" id="pedidosMesaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gestionar Pedidos - <span id="numeroMesaActual"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Menú</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group" id="listaMenu">
+                                    <!-- El menú se cargará dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Pedidos Pendientes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="pedidosPendientes">
+                                    <!-- Los pedidos pendientes se cargarán dinámicamente -->
+                                </div>
+                                <button class="btn btn-success w-100 mt-3" onclick="enviarPedidosCocina()">
+                                    Enviar a Cocina
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para seleccionar tipo de café -->
+<div class="modal fade" id="tipoCafeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar tipo de café</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Café')">Café</button>
+                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Cortado')">Cortado</button>
+                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Lágrima')">Lágrima</button>
+                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Con leche')">Con leche</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>Mapa del Restaurante</h4>
+                    <span class="badge bg-primary" id="nombreMozoDisplay"></span>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4" id="mapaMesas">
+                        <!-- El contenido se actualizará automáticamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+
+<script>
+let nombreMozo = '';
+let mesaActual = null;
+let pedidosPendientes = [];
+let menuCompleto = [];
+let platoSeleccionado = null;
+let esAdmin = false;
+let contadorPedidos = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar modal para ingresar nombre del mozo
+    const nombreMozoModal = new bootstrap.Modal(document.getElementById('nombreMozoModal'));
+    nombreMozoModal.show();
+    
+    // Cargar mapa de mesas inicial
+    actualizarMapaMesas();
+    
+    // Actualización automática cada 4 segundos
+    setInterval(actualizarMapaMesas, 4000);
+});
+
+function guardarNombreMozo() {
+    const nombreInput = document.getElementById('nombreMozo');
+    nombreMozo = nombreInput.value.trim();
+    esAdmin = (nombreMozo.toLowerCase() === 'admin');
+    
+    if (!nombreMozo) {
+        alert('Por favor ingrese su nombre');
+        return;
+    }
+    
+    // Ocultar modal y mostrar nombre en la interfaz
+    bootstrap.Modal.getInstance(document.getElementById('nombreMozoModal')).hide();
+    document.getElementById('nombreMozoDisplay').textContent = `Mozo: ${nombreMozo}`;
+}
+
+function actualizarMapaMesas() {
+    // Guardar el estado de los acordeones abiertos
+    const acordeonesAbiertos = {};
+    document.querySelectorAll('.accordion-collapse').forEach(acordeon => {
+        if (acordeon.classList.contains('show')) {
+            acordeonesAbiertos[acordeon.id] = true;
+        }
+    });
+
+    fetch('/api/mozos/mapa-mesas')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('mapaMesas');
+                container.innerHTML = data.data.map(mesa => {
+                    // Filtrar pedidos en cocina (excluir pagados y cancelados)
+                    const pedidosEnCocina = mesa.pedidos_en_cocina.filter(p => 
+                        !p.estado_cocina.includes('💰') && 
+                        !p.estado_cocina.includes('🔴')
+                    );
+
+                    // Filtrar pedidos entregados (excluir pagados y cancelados)
+                    const pedidosEntregados = mesa.pedidos_entregados.filter(p => 
+                        !p.estado_cocina.includes('💰') && 
+                        !p.estado_cocina.includes('🔴')
+                    );
+
+                    // Verificar si hay pedidos pendientes
+                    const tienePedidosPendientes = pedidosEnCocina.length > 0 || pedidosEntregados.length > 0;
+
+                    return `
+                    <div class="col">
+                            <div class="card h-100 ${tienePedidosPendientes ? 'border-warning' : 'border-success'}">
+                            <div class="card-body" onclick="abrirGestionPedidos('${mesa.id}', '${mesa.nombre}')" style="cursor: pointer;">
+                                <h5 class="card-title">${mesa.nombre}</h5>
+                                <p class="card-text">
+                                        <span class="badge ${tienePedidosPendientes ? 'bg-warning text-dark' : 'bg-success'}">
+                                            ${tienePedidosPendientes ? 'Ocupada' : 'Libre'}
+                                    </span>
+                                </p>
+                                    ${tienePedidosPendientes ? `
+                                    <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
+                                        <!-- Pedidos en Cocina -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button ${acordeonesAbiertos[`collapseCocina${mesa.id}`] ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCocina${mesa.id}">
+                                                        Pedidos en Cocina (${pedidosEnCocina.length})
+                                                </button>
+                                            </h2>
+                                            <div id="collapseCocina${mesa.id}" class="accordion-collapse collapse ${acordeonesAbiertos[`collapseCocina${mesa.id}`] ? 'show' : ''}">
+                                                <div class="accordion-body p-2">
+                                                        ${pedidosEnCocina.length === 0 ? 
+                                                        '<p class="text-muted mb-0">No hay pedidos en cocina</p>' :
+                                                            pedidosEnCocina.map(pedido => `
+                                                            <div class="card mb-2">
+                                                                <div class="card-body p-2">
+                                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                                        <h6 class="card-title mb-0">👨‍💼 ${pedido.mozo || 'Sin asignar'}</h6>
+                                                                        <small class="text-muted">${pedido.hora_envio}</small>
+                                                                    </div>
+                                                                    <p class="card-text mb-1">
+                                                                        ${pedido.cantidad}x ${pedido.nombre}
+                                                                    </p>
+                                                                    <p class="card-text mb-1">
+                                                                        <small>
+                                                                            Estado: ${pedido.estado_cocina}
+                                                                        </small>
+                                                                    </p>
+                                                                    ${pedido.notas && pedido.notas.length > 0 ? `
+                                                                        <div class="alert alert-info py-1 mb-1">
+                                                                            <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
+                                                                        </div>
+                                                                    ` : ''}
+                                                                    <button class="btn btn-success btn-sm w-100" onclick="marcarPedidoEntregado('${mesa.id}', '${pedido.mozo || 'Sin asignar'}', '${pedido.id}')">
+                                                                        Marcar como Entregado
+                                                                    </button>
+                                                                    ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedidoCocina(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
+                                                                </div>
+                                                            </div>
+                                                        `).join('')
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pedidos Entregados -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button ${acordeonesAbiertos[`collapseEntregados${mesa.id}`] ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntregados${mesa.id}">
+                                                        Pedidos Entregados (${pedidosEntregados.length})
+                                                </button>
+                                            </h2>
+                                            <div id="collapseEntregados${mesa.id}" class="accordion-collapse collapse ${acordeonesAbiertos[`collapseEntregados${mesa.id}`] ? 'show' : ''}">
+                                                <div class="accordion-body p-2">
+                                                        ${pedidosEntregados.length === 0 ? 
+                                                        '<p class="text-muted mb-0">No hay pedidos entregados</p>' :
+                                                            pedidosEntregados.map(pedido => `
+                                                            <div class="card mb-2">
+                                                                <div class="card-body p-2">
+                                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                                        <h6 class="card-title mb-0">👨‍💼 ${pedido.mozo || 'Sin asignar'}</h6>
+                                                                        <small class="text-muted">${pedido.hora_envio}</small>
+                                                                    </div>
+                                                                    <p class="card-text mb-1">
+                                                                        ${pedido.cantidad}x ${pedido.nombre}
+                                                                    </p>
+                                                                    <p class="card-text mb-1">
+                                                                        <small>
+                                                                            Estado: ${pedido.estado_cocina}
+                                                                        </small>
+                                                                    </p>
+                                                                    ${pedido.notas && pedido.notas.length > 0 ? `
+                                                                        <div class="alert alert-info py-1 mb-0">
+                                                                            <small>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
+                                                                        </div>
+                                                                    ` : ''}
+                                                                    ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedidoEntregado(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
+                                                                </div>
+                                                            </div>
+                                                        `).join('')
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                        <div class="mt-2">
+                                            <button class='btn btn-success btn-sm w-100' onclick='pagarCuenta("${mesa.id}")'>Pagar Cuenta</button>
+                                    ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                                        </div>
+                                ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                console.error('Error al cargar el mapa de mesas:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function abrirGestionPedidos(mesaId, mesaNombre) {
+    mesaActual = mesaId;
+    document.getElementById('numeroMesaActual').textContent = mesaNombre;
+    
+    // Cargar el menú
+    fetch('/api/menu')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Respuesta del menú:', data); // Log para ver la respuesta
+            menuCompleto = data.menu;
+            console.log('Menú completo:', menuCompleto); // Log para ver el menú procesado
+            
+            const listaMenu = document.getElementById('listaMenu');
+            
+            // Función para generar el HTML de una categoría
+            const generarCategoriaHTML = (titulo, platos, emoji) => {
+                console.log(`Generando categoría ${titulo}:`, platos); // Log para cada categoría
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">${emoji} ${titulo}</h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                ${platos.map(plato => `
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">${plato.nombre}</h6>
+                                                ${plato.descripcion && plato.descripcion.length > 0 ? `
+                                                    <p class="text-muted mb-1 small">${plato.descripcion.join(' | ')}</p>
+                                                ` : ''}
+                                                <small class="text-muted">$${plato.precio}</small>
+                                            </div>
+                                            <button class="btn btn-primary btn-sm ms-2" onclick="agregarPedido('${plato.id}')">
+                                                Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // Generar el HTML completo del menú
+            const menuHTML = `
+                ${menuCompleto.combos ? generarCategoriaHTML('Combos', menuCompleto.combos, '🍽️') : ''}
+                ${menuCompleto.cafeteria ? generarCategoriaHTML('Cafetería', menuCompleto.cafeteria, '☕') : ''}
+                ${menuCompleto.bebidas ? generarCategoriaHTML('Bebidas', menuCompleto.bebidas, '🥤') : ''}
+                ${menuCompleto.salados ? generarCategoriaHTML('Salados', menuCompleto.salados, '🥪') : ''}
+                ${menuCompleto.dulces ? generarCategoriaHTML('Dulces', menuCompleto.dulces, '🍰') : ''}
+            `;
+            
+            console.log('HTML generado:', menuHTML); // Log para ver el HTML generado
+            listaMenu.innerHTML = menuHTML;
+        })
+        .catch(error => {
+            console.error('Error al cargar el menú:', error);
+            listaMenu.innerHTML = '<div class="alert alert-danger">Error al cargar el menú</div>';
+        });
+    
+    // Cargar pedidos pendientes
+    actualizarPedidosPendientes();
+    
+    // Mostrar el modal
+    const pedidosMesaModal = new bootstrap.Modal(document.getElementById('pedidosMesaModal'));
+    pedidosMesaModal.show();
+}
+
+function agregarPedido(platoId) {
+    // Buscar el plato en todas las categorías
+    let platoEncontrado = null;
+    for (const categoria in menuCompleto) {
+        const plato = menuCompleto[categoria].find(p => p.id === parseInt(platoId));
+        if (plato) {
+            platoEncontrado = plato;
+            break;
+        }
+    }
+
+    if (!platoEncontrado) return;
+
+    // Verificar si es un producto de cafetería
+    const productosCafeteria = ['Pocillo', 'Jarrito', 'Taza', 'Tazón', 'Café para llevar chico', 'Café para llevar grande'];
+    
+    if (productosCafeteria.includes(platoEncontrado.nombre)) {
+        platoSeleccionado = platoEncontrado;
+        const tipoCafeModal = new bootstrap.Modal(document.getElementById('tipoCafeModal'));
+        tipoCafeModal.show();
+    } else {
+        agregarPedidoConNota(platoEncontrado);
+    }
+}
+
+function seleccionarTipoCafe(tipo) {
+    if (platoSeleccionado) {
+        agregarPedidoConNota(platoSeleccionado, tipo);
+        platoSeleccionado = null;
+        bootstrap.Modal.getInstance(document.getElementById('tipoCafeModal')).hide();
+    }
+}
+
+function agregarPedidoConNota(plato, nota = null) {
+    const pedido = {
+        id: `${Date.now()}_${contadorPedidos++}`,
+        plato_id: plato.id,
+        nombre: plato.nombre,
+        precio: plato.precio,
+        cantidad: 1,
+        estado: 'pendiente'
+    };
+
+    if (nota) {
+        pedido.notas = [{
+            texto: `Tipo: ${nota}`,
+            hora: new Date().toLocaleTimeString()
+        }];
+    }
+    
+    pedidosPendientes.push(pedido);
+    actualizarPedidosPendientes();
+}
+
+function actualizarPedidosPendientes() {
+    const contenedor = document.getElementById('pedidosPendientes');
+    if (pedidosPendientes.length === 0) {
+        contenedor.innerHTML = '<p class="text-muted">No hay pedidos pendientes</p>';
+        return;
+    }
+    
+    contenedor.innerHTML = pedidosPendientes.map(pedido => `
+        <div class="card mb-2">
+            <div class="card-body p-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${pedido.nombre}</h6>
+                        ${pedido.notas && pedido.notas.length > 0 ? 
+                            `<small class="text-primary">${pedido.notas[0].texto}</small>` : ''}
+                        <small class="text-muted d-block">$${pedido.precio}</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input type="number" class="form-control form-control-sm me-2" 
+                               style="width: 60px" value="${pedido.cantidad}" 
+                               onchange="actualizarCantidad('${pedido.id}', this.value)">
+                        <button class="btn btn-danger btn-sm" onclick="cancelarPedido('${pedido.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function actualizarCantidad(pedidoId, nuevaCantidad) {
+    const pedido = pedidosPendientes.find(p => p.id === pedidoId);
+    if (pedido) {
+        pedido.cantidad = parseInt(nuevaCantidad) || 1;
+        actualizarPedidosPendientes();
+    }
+}
+
+function cancelarPedido(pedidoId) {
+    pedidosPendientes = pedidosPendientes.filter(p => p.id !== pedidoId);
+    actualizarPedidosPendientes();
+}
+
+function enviarPedidosCocina() {
+    if (pedidosPendientes.length === 0) {
+        Swal.fire({
+            title: 'Atención',
+            text: 'No hay pedidos para enviar a cocina',
+            icon: 'warning',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+    
+    fetch(`/api/mesas/${mesaActual}/enviar-cocina`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            pedidos: pedidosPendientes,
+            mozo: nombreMozo
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Limpiar pedidos pendientes
+            pedidosPendientes = [];
+            // Cerrar el modal
+            bootstrap.Modal.getInstance(document.getElementById('pedidosMesaModal')).hide();
+            // Actualizar el mapa de mesas
+            actualizarMapaMesas();
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Pedidos enviados a cocina correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al enviar pedidos a cocina: ' + data.error,
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Error al enviar pedidos a cocina',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+    });
+}
+
+function marcarPedidoEntregado(mesaId, cliente, pedidoId) {
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Está seguro que desea marcar este pedido como entregado?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, marcar como entregado',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+        fetch(`/api/mozos/pedidos/${pedidoId}/entregar`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                mesa_id: mesaId,
+                cliente: cliente
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaMesas();
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Pedido marcado como entregado',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+            } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al marcar el pedido como entregado: ' + data.error,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al marcar el pedido como entregado',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        }
+    });
+}
+
+function cancelarPedidoCocina(event, mesaId, pedidoId) {
+    event.stopPropagation();
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Está seguro que desea cancelar este pedido en cocina?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No'
+    }).then((result) => {
+        if (result.isConfirmed) {
+        fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mesa_id: mesaId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaMesas();
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Pedido cancelado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+            } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al cancelar el pedido: ' + data.error,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+            }
+        })
+        .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cancelar el pedido',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        }
+    });
+}
+
+function cancelarPedidoEntregado(event, mesaId, pedidoId) {
+    event.stopPropagation();
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Está seguro que desea cancelar este pedido entregado?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No'
+    }).then((result) => {
+        if (result.isConfirmed) {
+        fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mesa_id: mesaId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaMesas();
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Pedido cancelado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+            } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al cancelar el pedido: ' + data.error,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+            }
+        })
+        .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cancelar el pedido',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        }
+    });
+}
+
+function reiniciarMesa(event, mesaId) {
+    event.stopPropagation();
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Está seguro que desea reiniciar esta mesa?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, reiniciar',
+        cancelButtonText: 'No'
+    }).then((result) => {
+        if (result.isConfirmed) {
+        fetch(`/api/mozos/mesas/${mesaId}/reiniciar`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaMesas();
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Mesa reiniciada correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+            } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al reiniciar la mesa: ' + data.error,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+            }
+        })
+        .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al reiniciar la mesa',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        }
+    });
+}
+
+function pagarCuenta(mesaId) {
+    // Prevenir que se abra el modal de gestión de pedidos
+    event.stopPropagation();
+    
+    // Primero obtener los pedidos entregados de la mesa
+    fetch(`/api/mozos/mesas/${mesaId}/pedidos`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al obtener los pedidos: ' + data.error,
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            const pedidosEntregados = data.pedidos.filter(p => 
+                p.estado_cocina === '✅ Entregado' && p.estado_cocina !== '🔴 Cancelado'
+            );
+
+            if (pedidosEntregados.length === 0) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'No hay pedidos entregados para pagar',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            // Separar pedidos múltiples en pedidos individuales
+            const pedidosIndividuales = [];
+            pedidosEntregados.forEach(pedido => {
+                for (let i = 0; i < pedido.cantidad; i++) {
+                    pedidosIndividuales.push({
+                        ...pedido,
+                        id: pedido.id,
+                        cantidad: 1,
+                        precio_individual: pedido.precio,
+                        nota_individual: pedido.notas ? `(${i + 1} de ${pedido.cantidad})` : null
+                    });
+                }
+            });
+
+            // Crear modal de pago
+            const modalPago = `
+                <div class="modal fade" id="modalPago" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pagar Cuenta</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <h6>Pedidos Entregados:</h6>
+                                    <div class="list-group mb-3">
+                                        ${pedidosIndividuales.map(pedido => `
+                                            <div class="list-group-item">
+                                                <div class="form-check">
+                                                    <input class="form-check-input pedido-check" type="checkbox" 
+                                                           value="${pedido.id}" id="pedido_${pedido.id}" 
+                                                           data-precio="${pedido.precio_individual}"
+                                                           checked
+                                                           onchange="actualizarTotal()">
+                                                    <label class="form-check-label" for="pedido_${pedido.id}">
+                                                        1x ${pedido.nombre} - $${pedido.precio_individual}
+                                                        ${pedido.notas ? `<br><small class="text-primary">${pedido.notas.map(n => n.texto).join(', ')}</small>` : ''}
+                                                        ${pedido.nota_individual ? `<br><small class="text-muted">${pedido.nota_individual}</small>` : ''}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Método de Pago:</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="efectivo" value="efectivo" checked>
+                                        <label class="form-check-label" for="efectivo">Efectivo</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="tarjeta" value="tarjeta">
+                                        <label class="form-check-label" for="tarjeta">Tarjeta</label>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <h6 class="mb-0">Total a pagar: $<span id="totalPagar">0</span></h6>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" onclick="procesarPago('${mesaId}')">Pagar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Agregar modal al DOM
+            document.body.insertAdjacentHTML('beforeend', modalPago);
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modalPago'));
+            modal.show();
+
+            // Calcular total inicial
+            actualizarTotal();
+
+            // Limpiar modal cuando se cierre
+            document.getElementById('modalPago').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al cargar los pedidos',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+}
+
+function actualizarTotal() {
+    const checkboxes = document.querySelectorAll('.pedido-check:checked');
+    let total = 0;
+    
+    checkboxes.forEach(checkbox => {
+        total += parseFloat(checkbox.dataset.precio);
+    });
+    
+    document.getElementById('totalPagar').textContent = total.toFixed(2);
+}
+
+function procesarPago(mesaId) {
+    // Obtener pedidos seleccionados
+    const pedidosSeleccionados = Array.from(document.querySelectorAll('.pedido-check:checked'))
+        .map(checkbox => checkbox.value);
+
+    if (pedidosSeleccionados.length === 0) {
+        Swal.fire({
+            title: 'Atención',
+            text: 'Debe seleccionar al menos un pedido para pagar',
+            icon: 'warning',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+
+    // Obtener método de pago
+    const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
+
+    const datosPago = {
+        mesa_id: mesaId,
+        mozo: nombreMozo,
+        pedidos_ids: pedidosSeleccionados,
+        metodo_pago: metodoPago
+    };
+
+    // Realizar el pago
+    fetch(`/api/mozos/mesas/${mesaId}/pagar`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(datosPago)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal de pago
+            bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
+            // Cerrar modal de gestión de pedidos
+            bootstrap.Modal.getInstance(document.getElementById('pedidosMesaModal')).hide();
+            
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                title: '¡Éxito!',
+                text: 'Cuenta pagada exitosamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
+            
+            // Actualizar mapa de mesas
+            actualizarMapaMesas();
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al pagar la cuenta: ' + data.error,
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'Error al procesar el pago',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+    });
+}
+</script>
+{% endblock %} 

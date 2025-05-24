@@ -1,0 +1,86 @@
+{
+  "1": [
+    {
+      "nombre": "Mesa 1",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "2": [
+    {
+      "nombre": "Mesa 2",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "3": [
+    {
+      "nombre": "Mesa 3",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "4": [
+    {
+      "nombre": "Mesa 4",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "5": [
+    {
+      "nombre": "Mesa 5",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "6": [
+    {
+      "nombre": "Barra interior",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "7": [
+    {
+      "nombre": "Barra exterior",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ]
+}
