@@ -1,100 +1,104 @@
-# Sistema de Restaurante
+# Sistema de Restaurante - Guía de Uso
 
-Sistema de gestión para restaurantes que permite manejar pedidos, mesas y pagos.
+## 📱 Acceso a la Aplicación
+1. Abre tu navegador web
+2. Ingresa la dirección: `https://tu-app.onrender.com`
+3. Verás la pantalla principal donde se ingresa el nombre del mozo o "admin" para poder cancelar y reinciar mesas con el mapa de mesas
 
-## Características
+## 🪑 Gestión de Mesas
 
-### Vista Mozos
-- Gestión de mesas con estado en tiempo real
-- Visualización de pedidos en cocina y entregados
-- Sistema de pagos con selección individual de pedidos
-- Cálculo automático del total a pagar
-- Registro de tickets por fecha
-- Gestión de pedidos con notas y cantidades
-- Cancelación de pedidos
-- Reinicio de mesas
+### Ver Estado de Mesas
+- Las mesas se muestran en el mapa principal
+- 🟢 Verde: Mesa libre
+- 🟠 Naranja: Mesa ocupada
 
-### Vista Cocina
-- Visualización de pedidos pendientes
-- Marcado de pedidos como entregados
-- Gestión de pedidos por mesa
-- Visualización de notas especiales
+### Ocupar una Mesa
+1. Haz clic en una mesa libre (verde)
+2. Se abrirá el menú de pedidos
+3. La mesa cambiará a ocupada (naranja)
 
-## Estructura de Archivos
+## 🍽️ Gestión de Pedidos
 
-```
-data/
-  historial/           # Historial de tickets por fecha
-    2024-03-21/       # Carpeta para cada día
-      ticket_mesa1_2024-03-21_14-30-45.json
-      ticket_mesa2_2024-03-21_15-15-30.json
-    2024-03-22/       # Nueva carpeta para el siguiente día
-      ticket_mesa1_2024-03-22_10-20-15.json
-  menu.json           # Menú del restaurante
-  mesas.json          # Estado de las mesas
-```
+### Agregar Pedidos
+1. Selecciona una mesa ocupada
+2. Haz clic en "Agregar Pedido"
+3. Selecciona los platos del menú
+4. Especifica la cantidad
+5. Agrega notas de qué tipo de café si es necesario
+6. Confirma el pedido
 
-## Funcionalidades Principales
+### Enviar a Cocina
+1. Selecciona una mesa
+2. Verás los pedidos pendientes
+3. Marca los pedidos que quieres enviar
+4. Haz clic en "Enviar a Cocina"
 
-### Gestión de Pedidos
-- Agregar pedidos con notas especiales
-- Modificar cantidades
-- Cancelar pedidos
-- Enviar pedidos a cocina
-- Marcar pedidos como entregados
+### Seguimiento de Pedidos
+Los pedidos tienen diferentes estados:
+- ⏳ Pendiente: Recién creado
+- 👨‍🍳 En Preparación: Enviado a cocina
+- ✅ Entregado: Listo y servido
+- 💰 Pagado: Ya se realizó el pago (servidor)
+- 🔴 Cancelado: Pedido anulado (servidor)
 
-### Sistema de Pagos
-- Selección individual de pedidos a pagar
-- Cálculo automático del total
-- Múltiples métodos de pago (efectivo/tarjeta)
-- Registro de tickets por fecha
-- Limpieza automática de mesa al pagar todo
+## 💰 Gestión de Pagos
 
-### Gestión de Mesas
-- Estado en tiempo real (libre/ocupada)
-- Visualización de pedidos en cocina y entregados
-- Reinicio de mesas
-- Comentarios del camarero
-- Notificaciones
+### Realizar un Pago
+1. Selecciona una mesa con pedidos entregados
+2. Haz clic en "Gestionar Pago"
+3. Selecciona los pedidos a pagar
+4. Elige el método de pago:
+   - Efectivo
+   - Tarjeta
+5. Confirma el pago
 
-## Tecnologías Utilizadas
+### Ver Tickets
+- Los tickets se guardan automáticamente
+- Se pueden encontrar en:
+  - `data/tickets/[fecha]/` - Tickets en formato texto
+  - `data/historial/[fecha]/` - Registro de pagos en JSON
 
-- Backend: Python con Flask
-- Frontend: HTML, CSS, JavaScript
-- Base de datos: JSON
-- UI: Bootstrap 5
-- Notificaciones: SweetAlert2
+## ⚙️ Funciones Adicionales
 
-## Instalación
+### Cancelar Pedidos (entrando como admin)
+1. Selecciona una mesa
+2. Encuentra el pedido a cancelar
+3. Haz clic en "Cancelar"
+4. Confirma la cancelación
 
-1. Clonar el repositorio
-2. Instalar dependencias:
-```bash
-pip install -r requirements.txt
-```
-3. Ejecutar la aplicación:
-```bash
-python app.py
-```
+### Liberar Mesa (entrando como admin)
+1. Selecciona una mesa ocupada
+2. Haz clic en "Reiniciar Mesa"
+3. Confirma la acción
+4. La mesa volverá a estado libre (verde)
 
-## Uso
+## 💡 Consejos de Uso
+- Siempre verifica el estado de los pedidos antes de enviarlos a cocina
+- Asegúrate de marcar los pedidos como entregados cuando los sirvas
+- Revisa los tickets generados para confirmar que los pagos se registraron correctamente (servidor)
+- Mantén las mesas actualizadas para evitar confusiones
 
-### Vista Mozos
-1. Ingresar nombre del mozo
-2. Gestionar pedidos de las mesas
-3. Marcar pedidos como entregados
-4. Procesar pagos
-5. Reiniciar mesas cuando sea necesario
+## 🔧 Solución de Problemas
+Si encuentras algún error:
+1. Verifica la conexión a internet 
+2. Asegúrate de que la mesa no esté bloqueada
+3. Intenta recargar la página 
+4. Si el problema persiste, contacta al administrador (BS developers)
 
-### Vista Cocina
-1. Ver pedidos pendientes
-2. Marcar pedidos como entregados
-3. Gestionar pedidos por mesa
+## 📋 Flujo de Trabajo Recomendado
+1. Ocupar mesa cuando llegan los clientes
+2. Tomar pedidos y enviarlos a cocina
+3. Marcar pedidos como entregados al servirlos
+4. Gestionar el pago cuando los clientes terminen
+5. Liberar la mesa después del pago (automático)
 
-## Notas
-- Los tickets se guardan automáticamente en carpetas por fecha
-- Cada ticket contiene información detallada del pago
-- El sistema mantiene un historial organizado por fecha
-- Los pedidos pueden ser pagados parcialmente
-- El sistema calcula automáticamente los totales
+## 📞 Soporte
+Si necesitas ayuda adicional:
+- Contacta al administrador del sistema (BS developers)
+- Revisa la documentación técnica 
+- Consulta con el equipo de soporte (BS developers)
+
+---
+BS developers - Santiago Tadeo López 
+*Última actualización: [Fecha actual]*
 

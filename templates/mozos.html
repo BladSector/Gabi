@@ -414,6 +414,36 @@ function agregarPedidoConNota(plato, nota = null) {
     
     pedidosPendientes.push(pedido);
     actualizarPedidosPendientes();
+
+    // Mostrar feedback visual
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed top-50 start-50 translate-middle';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">¡Pedido Agregado!</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <div>
+                        <strong>${plato.nombre}</strong>
+                        ${nota ? `<br><small class="text-muted">Tipo: ${nota}</small>` : ''}
+                    </div>
+                </div>
+                <hr class="my-2">
+                <small class="text-muted">Al final de la lista están los pedidos seleccionados</small>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    // Remover el toast después de 3 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
 
 function actualizarPedidosPendientes() {
