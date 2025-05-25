@@ -284,29 +284,7 @@ def pagar_mesa(mesa_id):
             return jsonify({'success': False, 'error': 'No hay pedidos válidos para pagar'}), 400
 
         # Registrar el pago en el sistema original
-        sistema_pedidos = SistemaPedidosMozos(sistema_mesas)
-        sistema_pedidos.mozo_actual = mozo
         sistema_pedidos._registrar_pago(mesa_id, mesa, pedidos_a_pagar, total, metodo_pago)
-
-        # Guardar una copia del ticket en la carpeta de la fecha
-        carpeta_fecha = obtener_carpeta_fecha()
-        fecha_hora = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        nombre_archivo = f'ticket_mesa{mesa_id}_{fecha_hora}.json'
-        ruta_ticket = os.path.join(carpeta_fecha, nombre_archivo)
-
-        # Crear el ticket con el formato original
-        ticket = {
-            'fecha': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'mesa_id': mesa_id,
-            'mozo': mozo,
-            'pedidos': pedidos_a_pagar,
-            'total': total,
-            'metodo_pago': metodo_pago
-        }
-
-        # Guardar el ticket
-        with open(ruta_ticket, 'w', encoding='utf-8') as f:
-            json.dump(ticket, f, ensure_ascii=False, indent=2)
 
         # Verificar si quedan pedidos por pagar
         pedidos_restantes = [p for p in mesa['cliente_1']['pedidos'] 
@@ -333,8 +311,7 @@ def pagar_mesa(mesa_id):
             'success': True,
             'message': 'Pago procesado exitosamente',
             'total': total,
-            'pedidos_pagados': len(pedidos_a_pagar),
-            'ruta_ticket': ruta_ticket
+            'pedidos_pagados': len(pedidos_a_pagar)
         })
 
     except Exception as e:
@@ -342,4 +319,4 @@ def pagar_mesa(mesa_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(host='0.0.0.0', port=5000, debug=True) 

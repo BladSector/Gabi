@@ -223,6 +223,13 @@ class SistemaPedidosMozos(BaseVisualizador):
     def _registrar_pago(self, mesa_id, mesa, pedidos_pagados, total, metodo_pago):
         """Registra el pago y genera el ticket."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        fecha = datetime.now().strftime("%Y-%m-%d")
+        
+        # Crear directorios si no existen
+        historial_fecha_dir = os.path.join(self.historial_dir, fecha)
+        tickets_fecha_dir = os.path.join("data", "tickets", fecha)
+        os.makedirs(historial_fecha_dir, exist_ok=True)
+        os.makedirs(tickets_fecha_dir, exist_ok=True)
         
         # Guardar historial
         historial = {
@@ -235,20 +242,20 @@ class SistemaPedidosMozos(BaseVisualizador):
             "metodo_pago": metodo_pago
         }
         
-        archivo_historial = os.path.join(self.historial_dir, f"pago_{mesa_id}_{timestamp}.json")
+        archivo_historial = os.path.join(historial_fecha_dir, f"ticket_mesa{mesa_id}_{timestamp}.json")
         with open(archivo_historial, 'w', encoding='utf-8') as f:
             json.dump(historial, f, ensure_ascii=False, indent=4)
         
         # Generar ticket
-        self._generar_ticket(mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp)
+        self._generar_ticket(mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp, tickets_fecha_dir)
         
         # Marcar pedidos como pagados
         for pedido in pedidos_pagados:
             pedido['estado_cocina'] = '💰 Pagado'
 
-    def _generar_ticket(self, mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp):
+    def _generar_ticket(self, mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp, tickets_fecha_dir):
         """Genera el ticket de pago."""
-        archivo_ticket = os.path.join("data", "tickets", f"ticket_{mesa_id}_{timestamp}.txt")
+        archivo_ticket = os.path.join(tickets_fecha_dir, f"ticket_{mesa_id}_{timestamp}.txt")
         os.makedirs(os.path.dirname(archivo_ticket), exist_ok=True)
         
         with open(archivo_ticket, 'w', encoding='utf-8') as f:
