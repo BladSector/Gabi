@@ -420,7 +420,7 @@ function agregarPedidoConNota(plato, nota = null) {
     toast.className = 'position-fixed top-50 start-50 translate-middle';
     toast.style.zIndex = '9999';
     toast.innerHTML = `
-        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 20px rgba(0,0,0,0.2);">
             <div class="toast-header bg-success text-white">
                 <strong class="me-auto">¡Pedido Agregado!</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
