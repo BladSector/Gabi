@@ -231,15 +231,20 @@ def pagar_mesa(mesa_id):
         # Crear un diccionario para acceso rápido a la información de cantidad a pagar
         cantidades_a_pagar = {p['id']: p['cantidad'] for p in pedidos_info}
 
+        # Lista para mantener los pedidos actualizados
+        pedidos_actualizados = []
+
         # Procesar cada pedido original
         for pedido in mesa['cliente_1']['pedidos']:
             print(f"\nProcesando pedido: {pedido['id']}")
             print(f"Estado actual: {pedido['estado_cocina']}")
             
+            pedido_actualizado = pedido.copy()
+            
             if pedido['id'] in cantidades_a_pagar and pedido['estado_cocina'] == '🟡 Pendiente':
                 cantidad_a_pagar = cantidades_a_pagar[pedido['id']]
                 cantidad_original = pedido['cantidad']
-                precio_unitario = pedido['precio']  # El precio en el pedido ya es unitario
+                precio_unitario = pedido['precio']
                 
                 print(f"Cantidad a pagar: {cantidad_a_pagar}")
                 print(f"Cantidad original: {cantidad_original}")
@@ -252,20 +257,25 @@ def pagar_mesa(mesa_id):
                     # Crear pedido para el pago
                     pedido_pago = pedido.copy()
                     pedido_pago['cantidad'] = cantidad_a_pagar
-                    pedido_pago['precio'] = precio_unitario  # Mantener precio unitario
+                    pedido_pago['precio'] = precio_unitario
                     pedidos_a_pagar.append(pedido_pago)
                     total += precio_total
                     
-                    # Actualizar el pedido original
-                    pedido['cantidad'] = cantidad_original - cantidad_a_pagar
-                    if pedido['cantidad'] > 0:
-                        print(f"Quedan {pedido['cantidad']} unidades pendientes a ${precio_unitario} cada una")
+                    # Actualizar la cantidad restante
+                    cantidad_restante = cantidad_original - cantidad_a_pagar
+                    if cantidad_restante > 0:
+                        pedido_actualizado['cantidad'] = cantidad_restante
+                        print(f"Quedan {cantidad_restante} unidades pendientes")
+                        pedidos_actualizados.append(pedido_actualizado)
                     else:
-                        pedido['estado_cocina'] = '💰 Pagado'
+                        pedido_actualizado['estado_cocina'] = '💰 Pagado'
+                        pedidos_actualizados.append(pedido_actualizado)
                         print("Pedido completamente pagado")
+            else:
+                # Mantener pedidos que no se están pagando
+                pedidos_actualizados.append(pedido_actualizado)
 
-                print(f"Pedido procesado - Nuevo estado: {pedido['estado_cocina']}")
-                print(f"Subtotal para este ítem: ${precio_total}")
+            print(f"Pedido procesado - Nuevo estado: {pedido_actualizado['estado_cocina']}")
 
         print("\nResumen de pago:")
         print(f"Pedidos a pagar: {len(pedidos_a_pagar)}")
@@ -279,16 +289,18 @@ def pagar_mesa(mesa_id):
         print("\nRegistrando pago en el sistema...")
         sistema_pedidos._registrar_pago(mesa_id, mesa, pedidos_a_pagar, total, metodo_pago)
 
-        # Verificar si quedan pedidos por pagar
-        pedidos_restantes = [p for p in mesa['cliente_1']['pedidos'] 
-                           if p['estado_cocina'] == '🟡 Pendiente' 
-                           and p['cantidad'] > 0]
+        # Actualizar los pedidos de la mesa
+        mesa['cliente_1']['pedidos'] = pedidos_actualizados
 
-        print(f"\nPedidos restantes: {len(pedidos_restantes)}")
+        # Verificar si quedan pedidos pendientes
+        pedidos_pendientes = [p for p in pedidos_actualizados 
+                            if p['estado_cocina'] == '🟡 Pendiente']
 
-        # Si no quedan pedidos por pagar, limpiar la mesa
-        if not pedidos_restantes:
-            print("No quedan pedidos - Liberando mesa")
+        print(f"\nPedidos pendientes restantes: {len(pedidos_pendientes)}")
+
+        # Solo liberar la mesa si no quedan pedidos pendientes
+        if not pedidos_pendientes:
+            print("No quedan pedidos pendientes - Liberando mesa")
             mesa['estado'] = 'libre'
             mesa['cliente_1'] = {
                 'pedidos': [],
@@ -318,6 +330,39 @@ def pagar_mesa(mesa_id):
         print("Traceback completo:")
         print(traceback.format_exc())
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/historial/diario')
+def obtener_historial_diario():
+    try:
+        # Obtener la fecha actual
+        fecha_actual = datetime.now().strftime('%Y-%m-%d')
+        carpeta_fecha = os.path.join('data', 'tickets', fecha_actual)
+        
+        # Verificar si existe el archivo de historial
+        archivo_historial = os.path.join(carpeta_fecha, 'historial_diario.json')
+        if not os.path.exists(archivo_historial):
+            return jsonify({
+                'success': True,
+                'historial': []
+            })
+        
+        # Leer el historial
+        with open(archivo_historial, 'r', encoding='utf-8') as f:
+            historial = json.load(f)
+        
+        return jsonify({
+            'success': True,
+            'historial': historial
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/resumen-diario')
+def resumen_diario():
+    return render_template('resumen_diario.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 

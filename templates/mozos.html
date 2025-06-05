@@ -93,8 +93,17 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>Mapa del Restaurante</h4>
                     <div>
+                        <h4>Mapa del Restaurante</h4>
+                        <div class="text-muted">
+                            <span id="fechaActual">📅 Fecha: --/--/----</span><br>
+                            <span id="horaActual">🕒 Hora: --:--</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/resumen-diario" target="_blank" class="btn btn-primary">
+                            📊 Resumen Diario
+                        </a>
                         <button class="btn btn-outline-primary" onclick="cambiarModo()">
                             <span id="modoActual">Modo: Mozo</span>
                         </button>
@@ -103,6 +112,60 @@
                 <div class="card-body">
                     <div class="row row-cols-1 row-cols-md-3 g-4" id="mapaMesas">
                         <!-- El contenido se actualizará automáticamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Resumen Diario -->
+<div class="modal fade" id="resumenDiarioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resumen Diario de Ventas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="resumen-container bg-light p-3 rounded" style="font-family: 'Segoe UI', Arial, sans-serif;">
+                    <div class="text-center border-bottom border-dark pb-2">
+                        <h4>INFORME DE VENTAS DIARIAS</h4>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-dark py-2">
+                        <span>📅 Fecha: <span id="resumenFecha">--/--/----</span></span>
+                        <span>🕒 Hora: <span id="resumenHora">--:--</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-dark py-2">
+                        <span>💰 Total día: $<span id="resumenTotal">0</span></span>
+                        <span>📊 Pedidos: <span id="resumenPedidos">0</span></span>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>HORA</th>
+                                    <th>PRODUCTO</th>
+                                    <th>CANT</th>
+                                    <th>P.UNIT</th>
+                                    <th>TOTAL</th>
+                                    <th>PAGO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumenTabla">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="border-top border-dark pt-2">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p>💵 EFECTIVO: $<span id="totalEfectivo">0</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>💳 TARJETA: $<span id="totalTarjeta">0</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -168,6 +231,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Actualización automática cada 4 segundos
     setInterval(actualizarMapaMesas, 4000);
+
+    // Iniciar actualización de fecha y hora
+    actualizarFechaHora();
+    // Actualizar la hora cada 3 segundos
+    setInterval(actualizarFechaHora, 3000);
 });
 
 function cambiarModo() {
@@ -1156,5 +1224,118 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function mostrarResumenDiario() {
+    // Obtener la fecha actual
+    const fecha = new Date();
+    const fechaFormateada = fecha.toLocaleDateString('es-AR');
+    const horaFormateada = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: undefined });
+    
+    // Actualizar fecha y hora en el modal
+    document.getElementById('resumenFecha').textContent = fechaFormateada;
+    document.getElementById('resumenHora').textContent = horaFormateada;
+    
+    // Obtener el historial del día
+    fetch('/api/historial/diario')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const historial = data.historial;
+                let totalDia = 0;
+                let totalEfectivo = 0;
+                let totalTarjeta = 0;
+                let cantidadPedidos = 0;
+                
+                // Limpiar tabla
+                const tabla = document.getElementById('resumenTabla');
+                tabla.innerHTML = '';
+                
+                // Procesar cada ticket
+                historial.forEach(ticket => {
+                    // Procesar pedidos del ticket
+                    Object.values(ticket.pedidos_por_cliente).forEach(cliente => {
+                        cliente.pedidos.forEach(pedido => {
+                            // Agregar fila a la tabla
+                            const fila = document.createElement('tr');
+                            fila.innerHTML = `
+                                <td>${ticket.hora.substring(0, 5)}</td>
+                                <td>${pedido.nombre}</td>
+                                <td class="text-center">${pedido.cantidad}</td>
+                                <td class="text-end">$${pedido.precio_unitario}</td>
+                                <td class="text-end">$${pedido.precio_total}</td>
+                                <td>${capitalizarMetodoPago(ticket.metodo_pago)}</td>
+                            `;
+                            tabla.appendChild(fila);
+                            
+                            // Actualizar totales
+                            totalDia += pedido.precio_total;
+                            cantidadPedidos += pedido.cantidad;
+                            
+                            // Actualizar totales por método de pago
+                            switch(ticket.metodo_pago.toLowerCase()) {
+                                case 'efectivo':
+                                    totalEfectivo += pedido.precio_total;
+                                    break;
+                                case 'tarjeta':
+                                    totalTarjeta += pedido.precio_total;
+                                    break;
+                            }
+                        });
+                    });
+                });
+                
+                // Actualizar totales en el modal
+                document.getElementById('resumenTotal').textContent = totalDia.toFixed(2);
+                document.getElementById('resumenPedidos').textContent = cantidadPedidos;
+                document.getElementById('totalEfectivo').textContent = `${totalEfectivo.toFixed(2)} (${((totalEfectivo/totalDia)*100).toFixed(1)}%)`;
+                document.getElementById('totalTarjeta').textContent = `${totalTarjeta.toFixed(2)} (${((totalTarjeta/totalDia)*100).toFixed(1)}%)`;
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el historial: ' + data.error,
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al cargar el historial',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('resumenDiarioModal'));
+    modal.show();
+}
+
+function capitalizarMetodoPago(metodo) {
+    return metodo.charAt(0).toUpperCase() + metodo.slice(1).toLowerCase();
+}
+
+function actualizarFechaHora() {
+    const ahora = new Date();
+    const opciones = { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+    };
+    
+    // Formatear fecha como DD/MM/YYYY
+    const dia = ahora.getDate().toString().padStart(2, '0');
+    const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
+    const año = ahora.getFullYear();
+    const fechaFormateada = `${dia}/${mes}/${año}`;
+    
+    // Formatear hora con AM/PM
+    const horaFormateada = ahora.toLocaleTimeString('es-AR', opciones).toLowerCase();
+    
+    document.getElementById('fechaActual').textContent = `📅 Fecha: ${fechaFormateada}`;
+    document.getElementById('horaActual').textContent = `🕒 Hora: ${horaFormateada}`;
+}
 </script>
 {% endblock %} 

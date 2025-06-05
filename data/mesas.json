@@ -2,21 +2,10 @@
   "1": [
     {
       "nombre": "Mesa 1",
-      "estado": "ocupada",
+      "estado": "libre",
       "cliente_1": {
-        "pedidos": [
-          {
-            "id": "1749082517629_1",
-            "nombre": "COMBO POSITIVO DULCE",
-            "cantidad": 1,
-            "precio": 4000,
-            "hora": "21:15",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          }
-        ],
-        "contador_pedidos": 1
+        "pedidos": [],
+        "contador_pedidos": 0
       },
       "comentarios_camarero": [],
       "notificaciones": []
