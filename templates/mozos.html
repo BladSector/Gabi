@@ -3,26 +3,6 @@
 {% block title %}Vista Mozos - Sistema de Restaurante{% endblock %}
 
 {% block content %}
-<!-- Modal para ingresar nombre del mozo -->
-<div class="modal fade" id="nombreMozoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bienvenido al Sistema</h5>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="nombreMozo" class="form-label">Ingrese su nombre</label>
-                    <input type="text" class="form-control" id="nombreMozo" placeholder="Nombre del mozo">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="guardarNombreMozo()">Ingresar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Modal para gestionar pedidos de mesa -->
 <div class="modal fade" id="pedidosMesaModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -86,13 +66,39 @@
     </div>
 </div>
 
+<!-- Modal para nombre de cliente Take Away -->
+<div class="modal fade" id="nombreClienteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ingresar Nombre del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="nombreCliente">Nombre del Cliente *</label>
+                    <input type="text" class="form-control" id="nombreCliente" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarNombreCliente()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Mapa del Restaurante</h4>
-                    <span class="badge bg-primary" id="nombreMozoDisplay"></span>
+                    <div>
+                        <button class="btn btn-outline-primary" onclick="cambiarModo()">
+                            <span id="modoActual">Modo: Mozo</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row row-cols-1 row-cols-md-3 g-4" id="mapaMesas">
@@ -112,19 +118,51 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
 
 <script>
-let nombreMozo = '';
+let esAdmin = false;
 let mesaActual = null;
 let pedidosPendientes = [];
 let menuCompleto = [];
 let platoSeleccionado = null;
-let esAdmin = false;
 let contadorPedidos = 0;
+let clienteActual = null;
+let esTakeAway = false;
+
+function obtenerEmojiCategoria(nombrePlato) {
+    // Productos de cafetería
+    const productosCafeteria = ['Pocillo', 'Jarrito', 'Taza', 'Tazón', 'Café para llevar chico', 'Café para llevar grande', 'Café', 'Cortado', 'Lágrima', 'Con leche'];
+    if (productosCafeteria.some(producto => nombrePlato.includes(producto))) {
+        return '☕';
+    }
+    
+    // Bebidas
+    const bebidas = ['Agua', 'Gaseosa', 'Limonada', 'Jugo', 'Té'];
+    if (bebidas.some(bebida => nombrePlato.includes(bebida))) {
+        return '🥤';
+    }
+    
+    // Salados
+    const salados = ['Sandwich', 'Tostado', 'Empanada', 'Pizza', 'Hamburguesa'];
+    if (salados.some(salado => nombrePlato.includes(salado))) {
+        return '🥪';
+    }
+    
+    // Dulces
+    const dulces = ['Torta', 'Alfajor', 'Galletas', 'Brownie', 'Muffin', 'Medialuna'];
+    if (dulces.some(dulce => nombrePlato.includes(dulce))) {
+        return '🍰';
+    }
+    
+    // Combos
+    const combos = ['Combo', 'Promo', 'Menú'];
+    if (combos.some(combo => nombrePlato.includes(combo))) {
+        return '🍽️';
+    }
+    
+    // Por defecto
+    return '🍽️';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Mostrar modal para ingresar nombre del mozo
-    const nombreMozoModal = new bootstrap.Modal(document.getElementById('nombreMozoModal'));
-    nombreMozoModal.show();
-    
     // Cargar mapa de mesas inicial
     actualizarMapaMesas();
     
@@ -132,19 +170,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(actualizarMapaMesas, 4000);
 });
 
-function guardarNombreMozo() {
-    const nombreInput = document.getElementById('nombreMozo');
-    nombreMozo = nombreInput.value.trim();
-    esAdmin = (nombreMozo.toLowerCase() === 'admin');
-    
-    if (!nombreMozo) {
-        alert('Por favor ingrese su nombre');
-        return;
-    }
-    
-    // Ocultar modal y mostrar nombre en la interfaz
-    bootstrap.Modal.getInstance(document.getElementById('nombreMozoModal')).hide();
-    document.getElementById('nombreMozoDisplay').textContent = `Mozo: ${nombreMozo}`;
+function cambiarModo() {
+    esAdmin = !esAdmin;
+    document.getElementById('modoActual').textContent = `Modo: ${esAdmin ? 'Admin' : 'Mozo'}`;
+    actualizarMapaMesas();
 }
 
 function actualizarMapaMesas() {
@@ -162,121 +191,127 @@ function actualizarMapaMesas() {
             if (data.success) {
                 const container = document.getElementById('mapaMesas');
                 container.innerHTML = data.data.map(mesa => {
-                    // Filtrar pedidos en cocina (excluir pagados y cancelados)
-                    const pedidosEnCocina = mesa.pedidos_en_cocina.filter(p => 
-                        !p.estado_cocina.includes('💰') && 
-                        !p.estado_cocina.includes('🔴')
-                    );
-
-                    // Filtrar pedidos entregados (excluir pagados y cancelados)
-                    const pedidosEntregados = mesa.pedidos_entregados.filter(p => 
-                        !p.estado_cocina.includes('💰') && 
-                        !p.estado_cocina.includes('🔴')
+                    // Filtrar pedidos pendientes
+                    const pedidosPendientes = mesa.pedidos_en_cocina.filter(p => 
+                        !p.estado_cocina.includes('💰')
                     );
 
                     // Verificar si hay pedidos pendientes
-                    const tienePedidosPendientes = pedidosEnCocina.length > 0 || pedidosEntregados.length > 0;
+                    const tienePedidosPendientes = pedidosPendientes.length > 0;
 
-                    return `
-                    <div class="col">
-                            <div class="card h-100 ${tienePedidosPendientes ? 'border-warning' : 'border-success'}">
-                            <div class="card-body" onclick="abrirGestionPedidos('${mesa.id}', '${mesa.nombre}')" style="cursor: pointer;">
-                                <h5 class="card-title">${mesa.nombre}</h5>
-                                <p class="card-text">
-                                        <span class="badge ${tienePedidosPendientes ? 'bg-warning text-dark' : 'bg-success'}">
-                                            ${tienePedidosPendientes ? 'Ocupada' : 'Libre'}
-                                    </span>
-                                </p>
-                                    ${tienePedidosPendientes ? `
-                                    <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
-                                        <!-- Pedidos en Cocina -->
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header">
-                                                <button class="accordion-button ${acordeonesAbiertos[`collapseCocina${mesa.id}`] ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCocina${mesa.id}">
-                                                        Pedidos en Cocina (${pedidosEnCocina.length})
-                                                </button>
-                                            </h2>
-                                            <div id="collapseCocina${mesa.id}" class="accordion-collapse collapse ${acordeonesAbiertos[`collapseCocina${mesa.id}`] ? 'show' : ''}">
-                                                <div class="accordion-body p-2">
-                                                        ${pedidosEnCocina.length === 0 ? 
-                                                        '<p class="text-muted mb-0">No hay pedidos en cocina</p>' :
-                                                            pedidosEnCocina.map(pedido => `
-                                                            <div class="card mb-2">
-                                                                <div class="card-body p-2">
-                                                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                                                        <h6 class="card-title mb-0">👨‍💼 ${pedido.mozo || 'Sin asignar'}</h6>
-                                                                        <small class="text-muted">${pedido.hora_envio}</small>
-                                                                    </div>
-                                                                    <p class="card-text mb-1">
-                                                                        ${pedido.cantidad}x ${pedido.nombre}
-                                                                    </p>
-                                                                    <p class="card-text mb-1">
-                                                                        <small>
-                                                                            Estado: ${pedido.estado_cocina}
-                                                                        </small>
-                                                                    </p>
-                                                                    ${pedido.notas && pedido.notas.length > 0 ? `
-                                                                        <div class="alert alert-info py-1 mb-1">
-                                                                            <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                    <button class="btn btn-success btn-sm w-100" onclick="marcarPedidoEntregado('${mesa.id}', '${pedido.mozo || 'Sin asignar'}', '${pedido.id}')">
-                                                                        Marcar como Entregado
-                                                                    </button>
-                                                                    ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedidoCocina(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
-                                                                </div>
-                                                            </div>
-                                                        `).join('')
-                                                    }
-                                                </div>
-                                            </div>
+                    // Agrupar pedidos por cliente para Take Away Barra
+                    let contenidoPedidos = '';
+                    if (mesa.nombre === 'Take Away Barra' && tienePedidosPendientes) {
+                        const pedidosPorCliente = {};
+                        pedidosPendientes.forEach(pedido => {
+                            const cliente = pedido.cliente || 'Cliente sin nombre';
+                            if (!pedidosPorCliente[cliente]) {
+                                pedidosPorCliente[cliente] = [];
+                            }
+                            pedidosPorCliente[cliente].push(pedido);
+                        });
+
+                        contenidoPedidos = `
+                            <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
+                                ${Object.entries(pedidosPorCliente).map(([cliente, pedidosCliente], index) => `
+                                    <div class="card mb-3 border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0">Cliente: ${cliente}</h6>
                                         </div>
-
-                                        <!-- Pedidos Entregados -->
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header">
-                                                <button class="accordion-button ${acordeonesAbiertos[`collapseEntregados${mesa.id}`] ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEntregados${mesa.id}">
-                                                        Pedidos Entregados (${pedidosEntregados.length})
-                                                </button>
-                                            </h2>
-                                            <div id="collapseEntregados${mesa.id}" class="accordion-collapse collapse ${acordeonesAbiertos[`collapseEntregados${mesa.id}`] ? 'show' : ''}">
-                                                <div class="accordion-body p-2">
-                                                        ${pedidosEntregados.length === 0 ? 
-                                                        '<p class="text-muted mb-0">No hay pedidos entregados</p>' :
-                                                            pedidosEntregados.map(pedido => `
-                                                            <div class="card mb-2">
-                                                                <div class="card-body p-2">
-                                                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                                                        <h6 class="card-title mb-0">👨‍💼 ${pedido.mozo || 'Sin asignar'}</h6>
-                                                                        <small class="text-muted">${pedido.hora_envio}</small>
-                                                                    </div>
-                                                                    <p class="card-text mb-1">
-                                                                        ${pedido.cantidad}x ${pedido.nombre}
-                                                                    </p>
-                                                                    <p class="card-text mb-1">
-                                                                        <small>
-                                                                            Estado: ${pedido.estado_cocina}
-                                                                        </small>
-                                                                    </p>
-                                                                    ${pedido.notas && pedido.notas.length > 0 ? `
-                                                                        <div class="alert alert-info py-1 mb-0">
-                                                                            <small>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
-                                                                        </div>
-                                                                    ` : ''}
-                                                                    ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedidoEntregado(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
-                                                                </div>
+                                        <div class="card-body p-2">
+                                            ${pedidosCliente.map(pedido => `
+                                                <div class="card mb-2">
+                                                    <div class="card-body p-2">
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <h6 class="card-title mb-0">${obtenerEmojiCategoria(pedido.nombre)}</h6>
+                                                            <small class="text-muted">${pedido.hora_envio}</small>
+                                                        </div>
+                                                        <p class="card-text mb-1">
+                                                            ${pedido.cantidad}x ${pedido.nombre}
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <small>
+                                                                Estado: ${pedido.estado_cocina}
+                                                            </small>
+                                                        </p>
+                                                        ${pedido.notas && pedido.notas.length > 0 ? `
+                                                            <div class="alert alert-info py-1 mb-1">
+                                                                <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
                                                             </div>
-                                                        `).join('')
-                                                    }
+                                                        ` : ''}
+                                                        ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedido(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            `).join('')}
+                                            <button class="btn btn-success w-100 mt-2" onclick='pagarCuentaCliente("${mesa.id}", "${cliente}")'>
+                                                Pagar Cuenta de ${cliente}
+                                            </button>
                                         </div>
                                     </div>
-                                        <div class="mt-2">
-                                            <button class='btn btn-success btn-sm w-100' onclick='pagarCuenta("${mesa.id}")'>Pagar Cuenta</button>
-                                    ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                                `).join('')}
+                            </div>
+                            ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                        `;
+                    } else if (tienePedidosPendientes) {
+                        // Visualización para otras mesas con pedidos pendientes
+                        contenidoPedidos = `
+                            <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button ${acordeonesAbiertos[`collapsePendientes${mesa.id}`] ? '' : 'collapsed'}" 
+                                                type="button" 
+                                                data-bs-toggle="collapse" 
+                                                data-bs-target="#collapsePendientes${mesa.id}">
+                                            Pedidos Pendientes (${pedidosPendientes.length})
+                                        </button>
+                                    </h2>
+                                    <div id="collapsePendientes${mesa.id}" 
+                                         class="accordion-collapse collapse ${acordeonesAbiertos[`collapsePendientes${mesa.id}`] ? 'show' : ''}">
+                                        <div class="accordion-body p-2">
+                                            ${pedidosPendientes.map(pedido => `
+                                                <div class="card mb-2">
+                                                    <div class="card-body p-2">
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <h6 class="card-title mb-0">${obtenerEmojiCategoria(pedido.nombre)}</h6>
+                                                            <small class="text-muted">${pedido.hora_envio}</small>
+                                                        </div>
+                                                        <p class="card-text mb-1">
+                                                            ${pedido.cantidad}x ${pedido.nombre}
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <small>Estado: ${pedido.estado_cocina}</small>
+                                                        </p>
+                                                        ${pedido.notas && pedido.notas.length > 0 ? `
+                                                            <div class="alert alert-info py-1 mb-1">
+                                                                <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
+                                                            </div>
+                                                        ` : ''}
+                                                        ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedido(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
+                                                    </div>
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button class='btn btn-success btn-sm w-100' onclick='pagarCuenta("${mesa.id}")'>Pagar Cuenta</button>
+                                ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="col">
+                            <div class="card h-100 ${tienePedidosPendientes ? 'border-warning' : 'border-success'}">
+                                <div class="card-body" onclick="abrirGestionPedidos('${mesa.id}', '${mesa.nombre}')" style="cursor: pointer;">
+                                    <h5 class="card-title">${mesa.nombre}</h5>
+                                    <p class="card-text">
+                                        <span class="badge ${tienePedidosPendientes ? 'bg-warning text-dark' : 'bg-success'}">
+                                            ${tienePedidosPendientes ? 'Ocupada' : 'Libre'}
+                                        </span>
+                                    </p>
+                                    ${contenidoPedidos}
                                 </div>
                             </div>
                         </div>
@@ -291,18 +326,60 @@ function actualizarMapaMesas() {
         });
 }
 
+function resetearEstadoPedidos() {
+    pedidosPendientes = [];
+    clienteActual = null;
+    contadorPedidos = 0;
+    platoSeleccionado = null;
+    esTakeAway = false;
+}
+
 function abrirGestionPedidos(mesaId, mesaNombre) {
+    // Resetear estado si cambiamos de mesa
+    if (mesaActual !== mesaId) {
+        resetearEstadoPedidos();
+    }
+    
     mesaActual = mesaId;
+    esTakeAway = mesaNombre === 'Take Away Barra';
     document.getElementById('numeroMesaActual').textContent = mesaNombre;
     
+    // Si es Take Away Barra, pedir nombre del cliente
+    if (esTakeAway) {
+        const nombreClienteModal = new bootstrap.Modal(document.getElementById('nombreClienteModal'));
+        nombreClienteModal.show();
+        return;
+    }
+    
+    continuarAbrirGestionPedidos();
+}
+
+function confirmarNombreCliente() {
+    const nombreCliente = document.getElementById('nombreCliente').value.trim();
+    if (!nombreCliente) {
+        Swal.fire({
+            title: 'Error',
+            text: 'El nombre del cliente es obligatorio para Take Away',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+    
+    clienteActual = nombreCliente;
+    bootstrap.Modal.getInstance(document.getElementById('nombreClienteModal')).hide();
+    continuarAbrirGestionPedidos();
+    
+    // Limpiar el campo para futuros usos
+    document.getElementById('nombreCliente').value = '';
+}
+
+function continuarAbrirGestionPedidos() {
     // Cargar el menú
     fetch('/api/menu')
         .then(response => response.json())
         .then(data => {
-            console.log('Respuesta del menú:', data); // Log para ver la respuesta
             menuCompleto = data.menu;
-            console.log('Menú completo:', menuCompleto); // Log para ver el menú procesado
-            
             const listaMenu = document.getElementById('listaMenu');
             
             // Función para generar el HTML de una categoría
@@ -348,18 +425,21 @@ function abrirGestionPedidos(mesaId, mesaNombre) {
             
             console.log('HTML generado:', menuHTML); // Log para ver el HTML generado
             listaMenu.innerHTML = menuHTML;
+            
+            // Mostrar el modal
+            const pedidosMesaModal = new bootstrap.Modal(document.getElementById('pedidosMesaModal'));
+            
+            // Agregar evento para limpiar estado al cerrar el modal
+            document.getElementById('pedidosMesaModal').addEventListener('hidden.bs.modal', function () {
+                resetearEstadoPedidos();
+                actualizarPedidosPendientes();
+            });
+            
+            pedidosMesaModal.show();
         })
         .catch(error => {
             console.error('Error al cargar el menú:', error);
-            listaMenu.innerHTML = '<div class="alert alert-danger">Error al cargar el menú</div>';
         });
-    
-    // Cargar pedidos pendientes
-    actualizarPedidosPendientes();
-    
-    // Mostrar el modal
-    const pedidosMesaModal = new bootstrap.Modal(document.getElementById('pedidosMesaModal'));
-    pedidosMesaModal.show();
 }
 
 function agregarPedido(platoId) {
@@ -396,13 +476,25 @@ function seleccionarTipoCafe(tipo) {
 }
 
 function agregarPedidoConNota(plato, nota = null) {
+    // Validar que haya nombre de cliente para Take Away
+    if (esTakeAway && !clienteActual) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Es necesario ingresar el nombre del cliente para Take Away',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+
     const pedido = {
         id: `${Date.now()}_${contadorPedidos++}`,
         plato_id: plato.id,
         nombre: plato.nombre,
         precio: plato.precio,
         cantidad: 1,
-        estado: 'pendiente'
+        estado: 'pendiente',
+        cliente: clienteActual || 'Mesa General'
     };
 
     if (nota) {
@@ -414,36 +506,6 @@ function agregarPedidoConNota(plato, nota = null) {
     
     pedidosPendientes.push(pedido);
     actualizarPedidosPendientes();
-
-    // Mostrar feedback visual
-    const toast = document.createElement('div');
-    toast.className = 'position-fixed top-50 start-50 translate-middle';
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" style="background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 20px rgba(0,0,0,0.2);">
-            <div class="toast-header bg-success text-white">
-                <strong class="me-auto">¡Pedido Agregado!</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                    <div>
-                        <strong>${plato.nombre}</strong>
-                        ${nota ? `<br><small class="text-muted">Tipo: ${nota}</small>` : ''}
-                    </div>
-                </div>
-                <hr class="my-2">
-                <small class="text-muted">Al final de la lista están los pedidos seleccionados</small>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(toast);
-
-    // Remover el toast después de 3 segundos
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
 }
 
 function actualizarPedidosPendientes() {
@@ -453,53 +515,147 @@ function actualizarPedidosPendientes() {
         return;
     }
     
-    contenedor.innerHTML = pedidosPendientes.map(pedido => `
-        <div class="card mb-2">
+    // Agrupar pedidos por cliente
+    const pedidosPorCliente = {};
+    pedidosPendientes.forEach(pedido => {
+        const cliente = pedido.cliente || 'Mesa General';
+        if (!pedidosPorCliente[cliente]) {
+            pedidosPorCliente[cliente] = [];
+        }
+        pedidosPorCliente[cliente].push(pedido);
+    });
+    
+    contenedor.innerHTML = Object.entries(pedidosPorCliente).map(([cliente, pedidos]) => `
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Cliente: ${cliente}</h6>
+            </div>
             <div class="card-body p-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">${pedido.nombre}</h6>
-                        ${pedido.notas && pedido.notas.length > 0 ? 
-                            `<small class="text-primary">${pedido.notas[0].texto}</small>` : ''}
-                        <small class="text-muted d-block">$${pedido.precio}</small>
+                ${pedidos.map(pedido => `
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${pedido.nombre}</h6>
+                                    ${pedido.notas && pedido.notas.length > 0 ? 
+                                        `<small class="text-primary">${pedido.notas[0].texto}</small>` : ''}
+                                    <small class="text-muted d-block">
+                                        Precio unitario: $${pedido.precio} | 
+                                        Total: $${(pedido.precio * pedido.cantidad).toFixed(2)}
+                                    </small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <input type="number" class="form-control form-control-sm me-2" 
+                                           style="width: 60px" value="${pedido.cantidad}" 
+                                           onchange="actualizarCantidad('${pedido.id}', this.value)">
+                                    <button class="btn btn-danger btn-sm" onclick="eliminarPedidoPendiente('${pedido.id}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <input type="number" class="form-control form-control-sm me-2" 
-                               style="width: 60px" value="${pedido.cantidad}" 
-                               onchange="actualizarCantidad('${pedido.id}', this.value)">
-                        <button class="btn btn-danger btn-sm" onclick="cancelarPedido('${pedido.id}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
+                `).join('')}
             </div>
         </div>
     `).join('');
 }
 
+function eliminarPedidoPendiente(pedidoId) {
+    pedidosPendientes = pedidosPendientes.filter(p => p.id !== pedidoId);
+    actualizarPedidosPendientes();
+}
+
 function actualizarCantidad(pedidoId, nuevaCantidad) {
     const pedido = pedidosPendientes.find(p => p.id === pedidoId);
     if (pedido) {
-        pedido.cantidad = parseInt(nuevaCantidad) || 1;
+        // Mantener el precio unitario original y solo actualizar la cantidad
+        pedido.cantidad = Math.max(1, parseInt(nuevaCantidad) || 1);
         actualizarPedidosPendientes();
     }
 }
 
-function cancelarPedido(pedidoId) {
-    pedidosPendientes = pedidosPendientes.filter(p => p.id !== pedidoId);
-    actualizarPedidosPendientes();
+function cancelarPedido(event, mesaId, pedidoId) {
+    event.stopPropagation();
+    Swal.fire({
+        title: 'Confirmar',
+        text: '¿Está seguro que desea cancelar este pedido?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mesa_id: mesaId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    actualizarMapaMesas();
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Pedido cancelado correctamente',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al cancelar el pedido: ' + data.error,
+                        icon: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cancelar el pedido',
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        }
+    });
 }
 
 function enviarPedidosCocina() {
     if (pedidosPendientes.length === 0) {
         Swal.fire({
             title: 'Atención',
-            text: 'No hay pedidos para enviar a cocina',
+            text: 'No hay pedidos para enviar',
             icon: 'warning',
             confirmButtonText: 'Aceptar'
         });
         return;
     }
+
+    // Validar nombre de cliente para Take Away
+    if (esTakeAway) {
+        const pedidosSinCliente = pedidosPendientes.some(p => !p.cliente || p.cliente === 'Mesa General');
+        if (pedidosSinCliente) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Todos los pedidos de Take Away deben tener un nombre de cliente',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+    }
+    
+    // Asegurarnos de que los pedidos tengan el cliente asignado y mantener precios unitarios
+    const pedidosConCliente = pedidosPendientes.map(pedido => ({
+        ...pedido,
+        cliente: pedido.cliente || clienteActual || 'Mesa General',
+        precio_unitario: pedido.precio,  // Mantener referencia explícita al precio unitario
+        precio_total: pedido.precio * pedido.cantidad  // Calcular precio total
+    }));
     
     fetch(`/api/mesas/${mesaActual}/enviar-cocina`, {
         method: 'POST',
@@ -507,15 +663,14 @@ function enviarPedidosCocina() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            pedidos: pedidosPendientes,
-            mozo: nombreMozo
+            pedidos: pedidosConCliente,
+            mozo: esAdmin ? 'Admin' : 'Mozo'
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Limpiar pedidos pendientes
-            pedidosPendientes = [];
+            resetearEstadoPedidos();
             // Cerrar el modal
             bootstrap.Modal.getInstance(document.getElementById('pedidosMesaModal')).hide();
             // Actualizar el mapa de mesas
@@ -523,14 +678,14 @@ function enviarPedidosCocina() {
             // Mostrar mensaje de éxito
             Swal.fire({
                 title: '¡Éxito!',
-                text: 'Pedidos enviados a cocina correctamente',
+                text: 'Pedidos enviados correctamente',
                 icon: 'success',
                 confirmButtonText: 'Aceptar'
             });
         } else {
             Swal.fire({
                 title: 'Error',
-                text: 'Error al enviar pedidos a cocina: ' + data.error,
+                text: data.error || 'Error al enviar pedidos',
                 icon: 'error',
                 confirmButtonText: 'Aceptar'
             });
@@ -540,160 +695,10 @@ function enviarPedidosCocina() {
         console.error('Error:', error);
         Swal.fire({
             title: 'Error',
-            text: 'Error al enviar pedidos a cocina',
+            text: 'Error al enviar pedidos',
             icon: 'error',
             confirmButtonText: 'Aceptar'
         });
-    });
-}
-
-function marcarPedidoEntregado(mesaId, cliente, pedidoId) {
-    Swal.fire({
-        title: 'Confirmar',
-        text: '¿Está seguro que desea marcar este pedido como entregado?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, marcar como entregado',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-        fetch(`/api/mozos/pedidos/${pedidoId}/entregar`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                mesa_id: mesaId,
-                cliente: cliente
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarMapaMesas();
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Pedido marcado como entregado',
-                        icon: 'success',
-                        confirmButtonText: 'Aceptar'
-                    });
-            } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error al marcar el pedido como entregado: ' + data.error,
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar'
-                    });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al marcar el pedido como entregado',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar'
-                });
-            });
-        }
-    });
-}
-
-function cancelarPedidoCocina(event, mesaId, pedidoId) {
-    event.stopPropagation();
-    Swal.fire({
-        title: 'Confirmar',
-        text: '¿Está seguro que desea cancelar este pedido en cocina?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No'
-    }).then((result) => {
-        if (result.isConfirmed) {
-        fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mesa_id: mesaId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarMapaMesas();
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Pedido cancelado correctamente',
-                        icon: 'success',
-                        confirmButtonText: 'Aceptar'
-                    });
-            } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error al cancelar el pedido: ' + data.error,
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar'
-                    });
-            }
-        })
-        .catch(error => {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al cancelar el pedido',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar'
-                });
-            });
-        }
-    });
-}
-
-function cancelarPedidoEntregado(event, mesaId, pedidoId) {
-    event.stopPropagation();
-    Swal.fire({
-        title: 'Confirmar',
-        text: '¿Está seguro que desea cancelar este pedido entregado?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No'
-    }).then((result) => {
-        if (result.isConfirmed) {
-        fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mesa_id: mesaId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarMapaMesas();
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Pedido cancelado correctamente',
-                        icon: 'success',
-                        confirmButtonText: 'Aceptar'
-                    });
-            } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error al cancelar el pedido: ' + data.error,
-                        icon: 'error',
-                        confirmButtonText: 'Aceptar'
-                    });
-            }
-        })
-        .catch(error => {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al cancelar el pedido',
-                    icon: 'error',
-                    confirmButtonText: 'Aceptar'
-                });
-            });
-        }
     });
 }
 
@@ -743,10 +748,8 @@ function reiniciarMesa(event, mesaId) {
 }
 
 function pagarCuenta(mesaId) {
-    // Prevenir que se abra el modal de gestión de pedidos
     event.stopPropagation();
     
-    // Primero obtener los pedidos entregados de la mesa
     fetch(`/api/mozos/mesas/${mesaId}/pedidos`)
         .then(response => response.json())
         .then(data => {
@@ -760,65 +763,91 @@ function pagarCuenta(mesaId) {
                 return;
             }
 
-            const pedidosEntregados = data.pedidos.filter(p => 
-                p.estado_cocina === '✅ Entregado' && p.estado_cocina !== '🔴 Cancelado'
+            const pedidosPendientes = data.pedidos.filter(p => 
+                p.estado_cocina === '🟡 Pendiente' && !p.estado_cocina.includes('🔴')
             );
 
-            if (pedidosEntregados.length === 0) {
+            if (pedidosPendientes.length === 0) {
                 Swal.fire({
                     title: 'Atención',
-                    text: 'No hay pedidos entregados para pagar',
+                    text: 'No hay pedidos pendientes para pagar',
                     icon: 'warning',
                     confirmButtonText: 'Aceptar'
                 });
                 return;
             }
 
-            // Separar pedidos múltiples en pedidos individuales
-            const pedidosIndividuales = [];
-            pedidosEntregados.forEach(pedido => {
+            // Agrupar pedidos por cliente
+            const pedidosPorCliente = {};
+            pedidosPendientes.forEach(pedido => {
+                const cliente = pedido.cliente || 'Mesa General';
+                if (!pedidosPorCliente[cliente]) {
+                    pedidosPorCliente[cliente] = [];
+                }
+                
+                // Desglosar pedidos con cantidad > 1 en ítems individuales
                 for (let i = 0; i < pedido.cantidad; i++) {
-                    pedidosIndividuales.push({
+                    const itemIndividual = {
                         ...pedido,
-                        id: pedido.id,
+                        cantidad_original: pedido.cantidad,
                         cantidad: 1,
-                        precio_individual: pedido.precio,
-                        nota_individual: pedido.notas ? `(${i + 1} de ${pedido.cantidad})` : null
-                    });
+                        precio_individual: pedido.precio,  // Mantener precio unitario original
+                        item_index: i + 1
+                    };
+                    pedidosPorCliente[cliente].push(itemIndividual);
                 }
             });
 
-            // Crear modal de pago
+            // Crear modal de pago con agrupación por cliente
             const modalPago = `
                 <div class="modal fade" id="modalPago" tabindex="-1">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Pagar Cuenta</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="mb-3">
-                                    <h6>Pedidos Entregados:</h6>
-                                    <div class="list-group mb-3">
-                                        ${pedidosIndividuales.map(pedido => `
-                                            <div class="list-group-item">
-                                                <div class="form-check">
-                                                    <input class="form-check-input pedido-check" type="checkbox" 
-                                                           value="${pedido.id}" id="pedido_${pedido.id}" 
-                                                           data-precio="${pedido.precio_individual}"
-                                                           checked
-                                                           onchange="actualizarTotal()">
-                                                    <label class="form-check-label" for="pedido_${pedido.id}">
-                                                        1x ${pedido.nombre} - $${pedido.precio_individual}
-                                                        ${pedido.notas ? `<br><small class="text-primary">${pedido.notas.map(n => n.texto).join(', ')}</small>` : ''}
-                                                        ${pedido.nota_individual ? `<br><small class="text-muted">${pedido.nota_individual}</small>` : ''}
-                                                    </label>
-                                                </div>
+                                ${Object.entries(pedidosPorCliente).map(([cliente, pedidos]) => `
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-primary text-white">
+                                            <div class="form-check">
+                                                <input class="form-check-input cliente-check" type="checkbox" 
+                                                       value="${cliente}" id="cliente_${cliente}"
+                                                       onchange="toggleClientePedidos('${cliente}')" checked>
+                                                <label class="form-check-label text-white" for="cliente_${cliente}">
+                                                    ${cliente}
+                                                </label>
                                             </div>
-                                        `).join('')}
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="list-group">
+                                                ${pedidos.map(pedido => `
+                                                    <div class="list-group-item">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input pedido-check" type="checkbox" 
+                                                                   value="${pedido.id}" 
+                                                                   id="pedido_${pedido.id}_${pedido.item_index}" 
+                                                                   data-cliente="${cliente}"
+                                                                   data-precio="${pedido.precio_individual}"
+                                                                   data-item-index="${pedido.item_index}"
+                                                                   data-cantidad-original="${pedido.cantidad_original}"
+                                                                   checked
+                                                                   onchange="actualizarTotal()">
+                                                            <label class="form-check-label" for="pedido_${pedido.id}_${pedido.item_index}">
+                                                                ${pedido.nombre} - $${pedido.precio_individual}
+                                                                ${pedido.cantidad_original > 1 ? 
+                                                                    `<small class="text-muted">(Ítem ${pedido.item_index} de ${pedido.cantidad_original})</small>` : 
+                                                                    ''}
+                                                                ${pedido.notas ? `<br><small class="text-primary">${pedido.notas.map(n => n.texto).join(', ')}</small>` : ''}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                `).join('')}
                                 <div class="mb-3">
                                     <h6>Método de Pago:</h6>
                                     <div class="form-check">
@@ -843,17 +872,11 @@ function pagarCuenta(mesaId) {
                 </div>
             `;
 
-            // Agregar modal al DOM
             document.body.insertAdjacentHTML('beforeend', modalPago);
-            
-            // Mostrar modal
             const modal = new bootstrap.Modal(document.getElementById('modalPago'));
             modal.show();
-
-            // Calcular total inicial
             actualizarTotal();
 
-            // Limpiar modal cuando se cierre
             document.getElementById('modalPago').addEventListener('hidden.bs.modal', function () {
                 this.remove();
             });
@@ -881,14 +904,33 @@ function actualizarTotal() {
 }
 
 function procesarPago(mesaId) {
-    // Obtener pedidos seleccionados
-    const pedidosSeleccionados = Array.from(document.querySelectorAll('.pedido-check:checked'))
-        .map(checkbox => checkbox.value);
+    // Obtener pedidos seleccionados y agruparlos
+    const pedidosSeleccionados = {};
+    
+    Array.from(document.querySelectorAll('.pedido-check:checked')).forEach(checkbox => {
+        const id = checkbox.value;
+        const itemIndex = parseInt(checkbox.dataset.itemIndex);
+        const cantidadOriginal = parseInt(checkbox.dataset.cantidadOriginal);
+        
+        if (!pedidosSeleccionados[id]) {
+            pedidosSeleccionados[id] = {
+                items: new Set(),
+                cantidadOriginal: cantidadOriginal
+            };
+        }
+        pedidosSeleccionados[id].items.add(itemIndex);
+    });
+    
+    // Convertir a formato para enviar al servidor
+    const pedidosParaPagar = Object.entries(pedidosSeleccionados).map(([id, data]) => ({
+        id: id,
+        cantidad: data.items.size
+    }));
 
-    if (pedidosSeleccionados.length === 0) {
+    if (pedidosParaPagar.length === 0) {
         Swal.fire({
             title: 'Atención',
-            text: 'Debe seleccionar al menos un pedido para pagar',
+            text: 'Debe seleccionar al menos un ítem para pagar',
             icon: 'warning',
             confirmButtonText: 'Aceptar'
         });
@@ -899,9 +941,8 @@ function procesarPago(mesaId) {
     const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
 
     const datosPago = {
-        mesa_id: mesaId,
-        mozo: nombreMozo,
-        pedidos_ids: pedidosSeleccionados,
+        mozo: esAdmin ? 'Admin' : 'Mozo',
+        pedidos_ids: pedidosParaPagar,
         metodo_pago: metodoPago
     };
 
@@ -918,8 +959,6 @@ function procesarPago(mesaId) {
         if (data.success) {
             // Cerrar modal de pago
             bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
-            // Cerrar modal de gestión de pedidos
-            bootstrap.Modal.getInstance(document.getElementById('pedidosMesaModal')).hide();
             
             // Mostrar mensaje de éxito
             Swal.fire({
@@ -950,5 +989,172 @@ function procesarPago(mesaId) {
         });
     });
 }
+
+function toggleClientePedidos(cliente) {
+    const clienteCheck = document.getElementById(`cliente_${cliente}`);
+    const pedidosCliente = document.querySelectorAll(`.pedido-check[data-cliente="${cliente}"]`);
+    
+    pedidosCliente.forEach(pedido => {
+        pedido.checked = clienteCheck.checked;
+    });
+    
+    actualizarTotal();
+}
+
+function pagarCuentaCliente(mesaId, cliente) {
+    event.stopPropagation();
+    
+    fetch(`/api/mozos/mesas/${mesaId}/pedidos`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al obtener los pedidos: ' + data.error,
+                    icon: 'error',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            // Filtrar solo los pedidos del cliente específico
+            const pedidosCliente = data.pedidos.filter(p => 
+                p.estado_cocina === '🟡 Pendiente' && 
+                !p.estado_cocina.includes('🔴') &&
+                p.cliente === cliente
+            );
+
+            if (pedidosCliente.length === 0) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'No hay pedidos pendientes para este cliente',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+
+            // Desglosar pedidos con cantidad > 1 en ítems individuales
+            const pedidosDesglosados = [];
+            pedidosCliente.forEach(pedido => {
+                for (let i = 0; i < pedido.cantidad; i++) {
+                    pedidosDesglosados.push({
+                        ...pedido,
+                        cantidad_original: pedido.cantidad,
+                        cantidad: 1,
+                        precio_individual: pedido.precio,  // Mantener precio unitario original
+                        item_index: i + 1
+                    });
+                }
+            });
+
+            // Crear modal de pago específico para el cliente
+            const modalPago = `
+                <div class="modal fade" id="modalPago" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pagar Cuenta - ${cliente}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Pedidos de ${cliente}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="list-group">
+                                            ${pedidosDesglosados.map(pedido => `
+                                                <div class="list-group-item">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input pedido-check" type="checkbox" 
+                                                               value="${pedido.id}" 
+                                                               id="pedido_${pedido.id}_${pedido.item_index}"
+                                                               data-cliente="${cliente}"
+                                                               data-precio="${pedido.precio_individual}"
+                                                               data-item-index="${pedido.item_index}"
+                                                               data-cantidad-original="${pedido.cantidad_original}"
+                                                               checked
+                                                               onchange="actualizarTotal()">
+                                                        <label class="form-check-label" for="pedido_${pedido.id}_${pedido.item_index}">
+                                                            ${pedido.nombre} - $${pedido.precio_individual}
+                                                            ${pedido.cantidad_original > 1 ? 
+                                                                `<small class="text-muted">(Ítem ${pedido.item_index} de ${pedido.cantidad_original})</small>` : 
+                                                                ''}
+                                                            ${pedido.notas ? `<br><small class="text-primary">${pedido.notas.map(n => n.texto).join(', ')}</small>` : ''}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3 mt-3">
+                                    <h6>Método de Pago:</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="efectivo" value="efectivo" checked>
+                                        <label class="form-check-label" for="efectivo">Efectivo</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="tarjeta" value="tarjeta">
+                                        <label class="form-check-label" for="tarjeta">Tarjeta</label>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info">
+                                    <h6 class="mb-0">Total a pagar: $<span id="totalPagar">0</span></h6>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" onclick="procesarPago('${mesaId}')">Pagar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalPago);
+            const modal = new bootstrap.Modal(document.getElementById('modalPago'));
+            modal.show();
+            actualizarTotal();
+
+            document.getElementById('modalPago').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al cargar los pedidos',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        });
+}
+
+// Agregar el modal de confirmación al cerrar
+document.addEventListener('DOMContentLoaded', function() {
+    const pedidosMesaModal = document.getElementById('pedidosMesaModal');
+    
+    pedidosMesaModal.addEventListener('hide.bs.modal', function (event) {
+        if (pedidosPendientes.length > 0) {
+            event.preventDefault();
+            Swal.fire({
+                title: '¿Está seguro?',
+                text: 'Hay pedidos sin enviar. Si cierra se perderán los cambios.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar',
+                cancelButtonText: 'No, continuar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    resetearEstadoPedidos();
+                    bootstrap.Modal.getInstance(pedidosMesaModal).hide();
+                }
+            });
+        }
+    });
+});
 </script>
 {% endblock %} 

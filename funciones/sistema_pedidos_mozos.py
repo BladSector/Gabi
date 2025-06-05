@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import json
+import shutil
 from .base_visualizacion import BaseVisualizador
 
 HISTORIAL_DIR = os.path.join("data", "historial_pagos")
@@ -20,16 +21,16 @@ class SistemaPedidosMozos(BaseVisualizador):
         """Muestra el mapa de mesas y permite seleccionar una para gestionar."""
         while True:
             print("\n=== MAPA DE MESAS ===")
-            mesas_ocupadas = []
+            todas_mesas = []
             
             for mesa_id, mesa_data in self.sistema_mesas.mesas.items():
                 mesa = mesa_data[0]
                 estado = "🟢 Libre" if mesa['estado'] == 'libre' else "🟠 Ocupada"
-                print(f"\n{mesa['nombre']} [{estado}]")
+                todas_mesas.append((mesa_id, mesa))
+                print(f"\n{len(todas_mesas)}. {mesa['nombre']} [{estado}]")
                 
                 if mesa['estado'] == 'ocupada':
                     self._mostrar_detalles_mesa(mesa_id, mesa)
-                    mesas_ocupadas.append((mesa_id, mesa))
 
             print("\n0. Volver al menú principal")
             
@@ -38,8 +39,8 @@ class SistemaPedidosMozos(BaseVisualizador):
                 if opcion == 0:
                     return
                 
-                if 1 <= opcion <= len(mesas_ocupadas):
-                    mesa_id, mesa = mesas_ocupadas[opcion - 1]
+                if 1 <= opcion <= len(todas_mesas):
+                    mesa_id, mesa = todas_mesas[opcion - 1]
                     self._gestionar_mesa(mesa_id, mesa)
                 else:
                     print("\n⚠️ Opción inválida")
@@ -80,6 +81,15 @@ class SistemaPedidosMozos(BaseVisualizador):
             if not self.sistema_mesas.ocupar_mesa(mesa_id):
                 return
 
+        # Si es la mesa de Pedidos, solicitar el nombre del cliente
+        if mesa['nombre'] == 'Pedidos' and not mesa['cliente_1'].get('nombre'):
+            nombre_cliente = input("\nIngrese el nombre del cliente: ").strip()
+            if not nombre_cliente:
+                print("\n⚠️ El nombre del cliente es obligatorio")
+                return
+            mesa['cliente_1']['nombre'] = nombre_cliente
+            self.sistema_mesas.guardar_mesas()
+
         todos_platos = self.sistema_mesas.mostrar_menu_completo()
         plato = self._seleccionar_plato_del_menu(todos_platos)
         
@@ -104,218 +114,267 @@ class SistemaPedidosMozos(BaseVisualizador):
                 print(f"{idx}. {pedido['cantidad']}x {pedido['nombre']} - ${pedido['precio'] * pedido['cantidad']}")
 
     def _enviar_pedidos_cocina(self, mesa_id, mesa):
-        """Envía los pedidos pendientes a cocina."""
-        cliente_key = 'cliente_1'
-        pedidos = mesa[cliente_key].get('pedidos', [])
-        
-        if not pedidos:
-            print("\nℹ️ No hay pedidos para enviar a cocina")
-            return
+        """Envía pedidos a la cocina"""
+        try:
+            mesa_data = self.sistema_mesas.obtener_mesa(mesa_id)
+            if not mesa_data:
+                return False
 
-        pedidos_pendientes = [p for p in pedidos if p['estado_cocina'] == self.estados_pedido['pendiente']]
-        if not pedidos_pendientes:
-            print("\nℹ️ No hay pedidos pendientes para enviar a cocina")
-            return
+            mesa = mesa_data[0]
+            
+            # Verificar si la mesa está libre
+            if mesa['estado'] == 'libre':
+                mesa['estado'] = 'ocupada'
+            
+            # Inicializar cliente_1 si no existe
+            if 'cliente_1' not in mesa:
+                mesa['cliente_1'] = {
+                    'pedidos': [],
+                    'contador_pedidos': 0
+                }
+            
+            # Procesar cada pedido
+            for pedido in mesa['cliente_1']['pedidos']:
+                pedido_procesado = {
+                    'id': pedido['id'],
+                    'plato_id': pedido.get('plato_id'),
+                    'nombre': pedido['nombre'],
+                    'precio': pedido['precio'],
+                    'cantidad': pedido['cantidad'],
+                    'estado_cocina': '🟡 Pendiente',
+                    'hora': datetime.now().strftime('%H:%M:%S'),
+                    'mozo': self.mozo_actual,
+                    'cliente': pedido.get('cliente', 'Mesa General')  # Agregar nombre del cliente
+                }
+                
+                # Agregar notas si existen
+                if 'notas' in pedido:
+                    pedido_procesado['notas'] = pedido['notas']
+                
+                mesa['cliente_1']['pedidos'].append(pedido_procesado)
+                mesa['cliente_1']['contador_pedidos'] += 1
 
-        print("\n=== ENVIAR A COCINA ===")
-        for idx, pedido in enumerate(pedidos_pendientes, 1):
-            print(f"{idx}. {pedido['cantidad']}x {pedido['nombre']}")
-
-        print("\n1. Enviar todos los pedidos")
-        print("2. Seleccionar pedidos específicos")
-        print("0. Volver")
-
-        opcion = input("\nSeleccione una opción: ")
-        if opcion == "1":
-            for pedido in pedidos_pendientes:
-                self._actualizar_estado_pedido(mesa_id, pedido['id'], 'en_preparacion')
-            print("\n✅ Todos los pedidos enviados a cocina")
-        elif opcion == "2":
-            seleccion = input("\nIngrese los números de los pedidos (separados por coma): ")
-            try:
-                indices = [int(i.strip()) - 1 for i in seleccion.split(',')]
-                for idx in indices:
-                    if 0 <= idx < len(pedidos_pendientes):
-                        self._actualizar_estado_pedido(mesa_id, pedidos_pendientes[idx]['id'], 'en_preparacion')
-                print("\n✅ Pedidos seleccionados enviados a cocina")
-            except ValueError:
-                print("\n⚠️ Formato inválido")
+            return self.sistema_mesas.guardar_mesas()
+            
+        except Exception as e:
+            print(f"Error al enviar pedidos a cocina: {str(e)}")
+            return False
 
     def _gestionar_pago_mesa(self, mesa_id, mesa):
         """Gestiona el pago de una mesa."""
         cliente_key = 'cliente_1'
         pedidos = mesa[cliente_key].get('pedidos', [])
         
-        if not pedidos:
-            print("\n⚠️ No hay pedidos para pagar")
-            return
-
-        # Filtrar solo pedidos entregados y no cancelados
-        pedidos_pagables = [p for p in pedidos if p['estado_cocina'] == self.estados_pedido['entregado'] 
+        # Filtrar solo pedidos en preparación y no cancelados
+        pedidos_pagables = [p for p in pedidos if p['estado_cocina'] == self.estados_pedido['en_preparacion']
                           and p['estado_cocina'] != self.estados_pedido['cancelado']]
         
         if not pedidos_pagables:
-            print("\n⚠️ No hay pedidos entregados para pagar")
+            print("\n⚠️ No hay pedidos en preparación para pagar")
             return
 
-        print("\n=== GESTIONAR PAGO ===")
+        print("\n=== PEDIDOS PARA PAGAR ===")
         total = 0
         for idx, pedido in enumerate(pedidos_pagables, 1):
             subtotal = pedido['precio'] * pedido['cantidad']
             total += subtotal
             print(f"{idx}. {pedido['cantidad']}x {pedido['nombre']} - ${subtotal}")
-            if 'notas' in pedido and pedido['notas']:
-                for nota in pedido['notas']:
-                    print(f"   • {nota['texto']}")
 
         print(f"\n💵 TOTAL: ${total}")
         
-        print("\n1. Pagar todos los pedidos")
-        print("2. Seleccionar pedidos específicos")
-        print("0. Volver")
+        confirmacion = input("\n¿Desea proceder con el pago? (s/n): ")
+        if confirmacion.lower() == 's':
+            metodo_pago = self._seleccionar_metodo_pago()
+            if metodo_pago:
+                self._registrar_pago(mesa_id, mesa, pedidos_pagables, total, metodo_pago)
+                print("\n✅ Pago registrado exitosamente")
 
-        opcion = input("\nSeleccione una opción: ")
-        if opcion in ["1", "2"]:
-            if opcion == "1":
-                self._procesar_pago(mesa_id, mesa, pedidos_pagables, total)
-            else:
-                seleccion = input("\nIngrese los números de los pedidos (separados por coma): ")
-                try:
-                    indices = [int(i.strip()) - 1 for i in seleccion.split(',')]
-                    pedidos_seleccionados = []
-                    subtotal = 0
-                    for idx in indices:
-                        if 0 <= idx < len(pedidos_pagables):
-                            pedido = pedidos_pagables[idx]
-                            pedidos_seleccionados.append(pedido)
-                            subtotal += pedido['precio'] * pedido['cantidad']
-                    if subtotal > 0:
-                        self._procesar_pago(mesa_id, mesa, pedidos_seleccionados, subtotal)
-                except ValueError:
-                    print("\n⚠️ Formato inválido")
-
-    def _procesar_pago(self, mesa_id, mesa, pedidos_a_pagar, total):
-        """Procesa el pago de una mesa."""
-        print("\n1. Pagar con efectivo")
-        print("2. Pagar con tarjeta")
-        print("0. Volver")
+    def _seleccionar_metodo_pago(self):
+        """Permite seleccionar el método de pago."""
+        print("\n=== MÉTODO DE PAGO ===")
+        print("1. Efectivo")
+        print("2. Tarjeta de débito")
+        print("3. Tarjeta de crédito")
+        print("4. Transferencia")
+        print("0. Cancelar")
         
-        opcion = input("\nSeleccione el método de pago: ")
-        if opcion in ["1", "2"]:
-            metodo_pago = "Efectivo" if opcion == "1" else "Tarjeta"
-            self._registrar_pago(mesa_id, mesa, pedidos_a_pagar, total, metodo_pago)
-            print("\n✅ Pago procesado exitosamente")
-            
-            # Verificar si quedan pedidos por pagar
-            pedidos_restantes = [p for p in mesa['cliente_1']['pedidos'] 
-                               if p['estado_cocina'] == self.estados_pedido['entregado'] 
-                               and p['estado_cocina'] != self.estados_pedido['cancelado']
-                               and p not in pedidos_a_pagar]
-            
-            if not pedidos_restantes:
-                print("\nℹ️ No quedan pedidos por pagar. La mesa será liberada.")
-                self.sistema_mesas.reiniciar_mesa(mesa_id)
-        elif opcion == "0":
-            return
-        else:
-            print("\n⚠️ Opción inválida")
+        try:
+            opcion = int(input("\nSeleccione el método de pago: "))
+            if opcion == 0:
+                return None
+            elif opcion == 1:
+                return "efectivo"
+            elif opcion == 2:
+                return "debito"
+            elif opcion == 3:
+                return "credito"
+            elif opcion == 4:
+                return "transferencia"
+            else:
+                print("\n⚠️ Opción inválida")
+                return None
+        except ValueError:
+            print("\n⚠️ Por favor ingrese un número válido")
+            return None
 
     def _registrar_pago(self, mesa_id, mesa, pedidos_pagados, total, metodo_pago):
-        """Registra el pago y genera el ticket."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        fecha = datetime.now().strftime("%Y-%m-%d")
-        
-        # Crear directorios si no existen
-        historial_fecha_dir = os.path.join(self.historial_dir, fecha)
-        tickets_fecha_dir = os.path.join("data", "tickets", fecha)
-        os.makedirs(historial_fecha_dir, exist_ok=True)
-        os.makedirs(tickets_fecha_dir, exist_ok=True)
-        
-        # Guardar historial
-        historial = {
-            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M hs"),
-            "mesa_id": mesa_id,
-            "mesa_nombre": mesa['nombre'],
-            "mozo": self.mozo_actual,
-            "pedidos_pagados": pedidos_pagados,
-            "total": total,
-            "metodo_pago": metodo_pago
-        }
-        
-        archivo_historial = os.path.join(historial_fecha_dir, f"ticket_mesa{mesa_id}_{timestamp}.json")
-        with open(archivo_historial, 'w', encoding='utf-8') as f:
-            json.dump(historial, f, ensure_ascii=False, indent=4)
-        
-        # Generar ticket
-        self._generar_ticket(mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp, tickets_fecha_dir)
-        
-        # Marcar pedidos como pagados
-        for pedido in pedidos_pagados:
-            pedido['estado_cocina'] = '💰 Pagado'
+        """Registra el pago de los pedidos"""
+        try:
+            # Obtener los IDs de los pedidos pagados
+            ids_pagados = [p['id'] for p in pedidos_pagados]
+            
+            # Actualizar estado de los pedidos
+            pedidos_actualizados = []
+            for pedido in mesa['cliente_1']['pedidos']:
+                if pedido['id'] in ids_pagados:
+                    pedido['estado_cocina'] = '💰 Pagado'
+                pedidos_actualizados.append(pedido)
+            
+            mesa['cliente_1']['pedidos'] = pedidos_actualizados
+            
+            # Guardar ticket
+            self._guardar_ticket(mesa_id, pedidos_pagados, total, metodo_pago)
+            
+            return True
+        except Exception as e:
+            print(f"Error al registrar pago: {str(e)}")
+            return False
 
-    def _generar_ticket(self, mesa_id, mesa, pedidos_pagados, total, metodo_pago, timestamp, tickets_fecha_dir):
-        """Genera el ticket de pago."""
-        archivo_ticket = os.path.join(tickets_fecha_dir, f"ticket_{mesa_id}_{timestamp}.txt")
-        os.makedirs(os.path.dirname(archivo_ticket), exist_ok=True)
-        
-        with open(archivo_ticket, 'w', encoding='utf-8') as f:
-            f.write("=" * 40 + "\n")
-            f.write("           TICKET DE PAGO\n")
-            f.write("=" * 40 + "\n\n")
+    def _guardar_ticket(self, mesa_id, pedidos, total, metodo_pago):
+        """Guarda el ticket de los pedidos pagados"""
+        try:
+            fecha_actual = datetime.now().strftime('%Y-%m-%d')
+            hora_actual = datetime.now().strftime('%H:%M:%S')
+            timestamp = datetime.now().timestamp()
             
-            f.write(f"Mesa: {mesa['nombre']}\n")
-            f.write(f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n")
-            f.write(f"Mozo: {self.mozo_actual}\n")
-            f.write("-" * 40 + "\n\n")
-            
-            f.write("DETALLE DE PEDIDOS PAGADOS:\n")
-            f.write("-" * 40 + "\n")
-            for pedido in pedidos_pagados:
-                subtotal = pedido['precio'] * pedido['cantidad']
-                f.write(f"{pedido['cantidad']}x {pedido['nombre']}\n")
-                f.write(f"   Precio unitario: ${pedido['precio']}\n")
+            # Agrupar pedidos por cliente y calcular subtotales
+            pedidos_por_cliente = {}
+            for pedido in pedidos:
+                cliente = pedido.get('cliente', 'Mesa General')
+                if cliente not in pedidos_por_cliente:
+                    pedidos_por_cliente[cliente] = {
+                        'pedidos': [],
+                        'subtotal': 0
+                    }
+                
+                # Asegurar que usamos el precio unitario correcto
+                precio_unitario = pedido.get('precio_unitario', pedido['precio'])
+                cantidad = pedido['cantidad']
+                precio_total_item = precio_unitario * cantidad
+                
+                # Crear copia del pedido con información detallada
+                pedido_detallado = {
+                    'id': pedido['id'],
+                    'nombre': pedido['nombre'],
+                    'cantidad': cantidad,
+                    'precio_unitario': precio_unitario,
+                    'precio_total': precio_total_item,
+                    'hora': pedido.get('hora', datetime.now().strftime('%H:%M')),
+                    'estado_cocina': pedido.get('estado_cocina', '💰 Pagado'),
+                    'mozo': pedido.get('mozo', self.mozo_actual or 'No especificado'),
+                    'cliente': cliente
+                }
+                
+                # Agregar notas si existen
                 if 'notas' in pedido and pedido['notas']:
-                    for nota in pedido['notas']:
-                        f.write(f"   • {nota['texto']}\n")
-                f.write(f"   Subtotal: ${subtotal}\n\n")
+                    pedido_detallado['notas'] = pedido['notas']
+                
+                pedidos_por_cliente[cliente]['pedidos'].append(pedido_detallado)
+                pedidos_por_cliente[cliente]['subtotal'] += precio_total_item
             
-            f.write("-" * 40 + "\n")
-            f.write(f"TOTAL A PAGAR: ${total}\n")
-            f.write(f"Método de pago: {metodo_pago}\n")
-            f.write("=" * 40 + "\n")
-            f.write("¡Gracias por su visita!\n")
-            f.write("=" * 40 + "\n")
+            # Recalcular el total general
+            total_general = sum(info['subtotal'] for info in pedidos_por_cliente.values())
+            
+            # Crear el ticket con información detallada
+            ticket = {
+                'ticket_id': f"{int(timestamp * 1000)}_{mesa_id}",
+                'fecha': fecha_actual,
+                'hora': hora_actual,
+                'mesa_id': mesa_id,
+                'mesa_nombre': self.sistema_mesas.obtener_mesa(mesa_id)[0]['nombre'],
+                'pedidos_por_cliente': pedidos_por_cliente,
+                'total': total_general,  # Usar el total recalculado
+                'metodo_pago': metodo_pago,
+                'mozo': self.mozo_actual or 'No especificado',
+                'detalles_pago': {
+                    'timestamp': timestamp,
+                    'fecha_hora_completa': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),
+                }
+            }
+            
+            # Crear estructura de directorios
+            directorio_base = os.path.join('data', 'tickets')
+            directorio_fecha = os.path.join(directorio_base, fecha_actual)
+            
+            for dir in [directorio_base, directorio_fecha]:
+                os.makedirs(dir, exist_ok=True)
+            
+            # Guardar ticket principal
+            nombre_archivo = f'ticket_mesa{mesa_id}_{datetime.now().strftime("%H%M%S")}.json'
+            ruta_archivo = os.path.join(directorio_fecha, nombre_archivo)
+            
+            # Guardar usando escritura segura
+            ruta_temporal = ruta_archivo + '.tmp'
+            with open(ruta_temporal, 'w', encoding='utf-8') as f:
+                json.dump(ticket, f, ensure_ascii=False, indent=2)
+            os.replace(ruta_temporal, ruta_archivo)
+            
+            # Actualizar historial diario
+            historial_path = os.path.join(directorio_fecha, 'historial_diario.json')
+            try:
+                if os.path.exists(historial_path):
+                    with open(historial_path, 'r', encoding='utf-8') as f:
+                        historial = json.load(f)
+                else:
+                    historial = []
+                
+                historial.append(ticket)
+                
+                # Guardar historial usando escritura segura
+                historial_temp = historial_path + '.tmp'
+                with open(historial_temp, 'w', encoding='utf-8') as f:
+                    json.dump(historial, f, ensure_ascii=False, indent=2)
+                os.replace(historial_temp, historial_path)
+                
+            except Exception as e:
+                print(f"⚠️ Error al actualizar historial diario: {str(e)}")
+                # Continuar a pesar del error en el historial
+            
+            print(f"✅ Ticket guardado exitosamente: {ruta_archivo}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error al guardar ticket: {str(e)}")
+            import traceback
+            print("Traceback completo:")
+            print(traceback.format_exc())
+            return False
 
     def _seleccionar_plato_del_menu(self, todos_platos):
-        """Permite seleccionar un plato del menú completo."""
-        while True:
-            try:
-                print("\n--- SELECCIÓN ---")
-                print("Ingrese el número del plato que desea (0 para volver)")
-                seleccion = int(input("> "))
-
-                if seleccion == 0:
-                    return None
-                elif 1 <= seleccion <= len(todos_platos):
-                    plato_seleccionado = todos_platos[seleccion - 1]['plato']
-                    print(f"\nSeleccionaste: {plato_seleccionado['nombre']} - ${plato_seleccionado['precio']}")
-                    return plato_seleccionado
-                else:
-                    print("⚠️ Número inválido. Intente nuevamente.")
-            except ValueError:
-                print("⚠️ Por favor ingrese un número.")
+        """Permite seleccionar un plato del menú."""
+        try:
+            opcion = int(input("\nSeleccione un plato (número): "))
+            if 1 <= opcion <= len(todos_platos):
+                return todos_platos[opcion - 1]['plato']
+            else:
+                print("\n⚠️ Opción inválida")
+                return None
+        except ValueError:
+            print("\n⚠️ Por favor ingrese un número válido")
+            return None
 
     def _pedir_cantidad(self):
-        """Solicita la cantidad de un plato."""
-        while True:
-            try:
-                cantidad = int(input("\nIngrese la cantidad: "))
-                if cantidad > 0:
-                    return cantidad
-                else:
-                    print("⚠️ La cantidad debe ser mayor a 0")
-            except ValueError:
-                print("⚠️ Por favor ingrese un número válido")
+        """Solicita la cantidad del plato."""
+        try:
+            cantidad = int(input("\nIngrese la cantidad: "))
+            if cantidad > 0:
+                return cantidad
+            else:
+                print("\n⚠️ La cantidad debe ser mayor a 0")
+                return 0
+        except ValueError:
+            print("\n⚠️ Por favor ingrese un número válido")
+            return 0
 
     def _agregar_pedido(self, mesa_id, plato, cantidad):
         """Agrega un pedido a la mesa."""
@@ -349,221 +408,8 @@ class SistemaPedidosMozos(BaseVisualizador):
         
         self.sistema_mesas.guardar_mesas()
 
-    def _finalizar_pedido(self, mesa_id):
-        """Finaliza el pedido de una mesa."""
-        mesa_data = self.sistema_mesas.obtener_mesa(mesa_id)
-        if not mesa_data:
-            return
-
-        mesa = mesa_data[0]
-        cliente_key = 'cliente_1'
-        
-        if not mesa[cliente_key].get('pedidos'):
-            print("\n⚠️ No hay pedidos para finalizar")
-            return
-            
-        print("\n=== RESUMEN DEL PEDIDO ===")
-        total = 0
-        for pedido in mesa[cliente_key]['pedidos']:
-            subtotal = pedido['precio'] * pedido['cantidad']
-            total += subtotal
-            print(f"{pedido['cantidad']}x {pedido['nombre']} - ${subtotal}")
-        
-        print(f"\n💵 TOTAL: ${total}")
-        print("\n✅ Pedido finalizado exitosamente")
-
-    def gestionar_pedidos_activos(self):
-        """Gestiona los pedidos activos."""
-        pedidos_activos = self._obtener_pedidos_activos()
-        if not pedidos_activos:
-            print("\n⚠️ No hay pedidos activos para gestionar")
-            return
-
-        print("\n=== PEDIDOS ACTIVOS ===")
-        for idx, pedido in enumerate(pedidos_activos, 1):
-            print(f"\n{idx}. Mesa: {pedido['mesa_nombre']}")
-            print(f"   - {pedido['cantidad']}x {pedido['nombre']} [{pedido['estado_cocina']}]")
-            print(f"   - Mozo: {pedido['mozo']}")
-
-        print("\n0. Volver")
-        try:
-            opcion = int(input("\nSeleccione un pedido para gestionar: "))
-            if opcion == 0:
-                return
-            if 1 <= opcion <= len(pedidos_activos):
-                pedido = pedidos_activos[opcion - 1]
-                self._gestionar_pedido(pedido)
-            else:
-                print("\n⚠️ Opción inválida")
-        except ValueError:
-            print("\n⚠️ Por favor ingrese un número válido")
-
-    def _obtener_pedidos_activos(self):
-        """Obtiene todos los pedidos activos."""
-        pedidos_activos = []
-        for mesa_id, mesa_data in self.sistema_mesas.mesas.items():
-            mesa = mesa_data[0]
-            if mesa['estado'] == 'ocupada':
-                cliente_key = 'cliente_1'
-                for pedido in mesa[cliente_key].get('pedidos', []):
-                    if pedido['estado_cocina'] in [self.estados_pedido['pendiente'], self.estados_pedido['en_preparacion']]:
-                        pedido_info = {
-                            'id': pedido['id'],
-                            'mesa_id': mesa_id,
-                            'mesa_nombre': mesa['nombre'],
-                            'nombre': pedido['nombre'],
-                            'cantidad': pedido['cantidad'],
-                            'estado_cocina': pedido['estado_cocina'],
-                            'mozo': pedido.get('mozo', 'No asignado')
-                        }
-                        pedidos_activos.append(pedido_info)
-        return pedidos_activos
-
-    def _gestionar_pedido(self, pedido):
-        """Gestiona un pedido específico."""
-        print(f"\n=== GESTIONANDO PEDIDO ===")
-        print(f"Mesa: {pedido['mesa_nombre']}")
-        print(f"Pedido: {pedido['cantidad']}x {pedido['nombre']}")
-        print(f"Estado actual: {pedido['estado_cocina']}")
-
-        if pedido['estado_cocina'] == self.estados_pedido['pendiente']:
-            print("\n1. Marcar como EN PREPARACIÓN")
-            print("2. Cancelar pedido")
-            print("0. Volver")
-            
-            opcion = input("\nSeleccione una opción: ")
-            if opcion == "1":
-                self._actualizar_estado_pedido(pedido['mesa_id'], pedido['id'], 'en_preparacion')
-            elif opcion == "2":
-                self._actualizar_estado_pedido(pedido['mesa_id'], pedido['id'], 'cancelado')
-            elif opcion == "0":
-                return
-            else:
-                print("\n⚠️ Opción inválida")
-        elif pedido['estado_cocina'] == self.estados_pedido['en_preparacion']:
-            print("\n1. Marcar como ENTREGADO")
-            print("2. Cancelar pedido")
-            print("0. Volver")
-            
-            opcion = input("\nSeleccione una opción: ")
-            if opcion == "1":
-                self._actualizar_estado_pedido(pedido['mesa_id'], pedido['id'], 'entregado')
-            elif opcion == "2":
-                self._actualizar_estado_pedido(pedido['mesa_id'], pedido['id'], 'cancelado')
-            elif opcion == "0":
-                return
-            else:
-                print("\n⚠️ Opción inválida")
-
-    def _actualizar_estado_pedido(self, mesa_id, pedido_id, nuevo_estado):
-        """Actualiza el estado de un pedido."""
-        mesa_data = self.sistema_mesas.obtener_mesa(mesa_id)
-        if not mesa_data:
-            return False
-
-        mesa = mesa_data[0]
-        cliente_key = 'cliente_1'
-        
-        for pedido in mesa[cliente_key].get('pedidos', []):
-            if pedido['id'] == pedido_id:
-                pedido['estado_cocina'] = self.estados_pedido[nuevo_estado]
-                self.sistema_mesas.guardar_mesas()
-                print(f"\n✅ Pedido actualizado a {self.estados_pedido[nuevo_estado]}")
-                return True
-        return False
-
-    def marcar_pedido_entregado(self):
-        """Marca un pedido como entregado."""
-        pedidos_en_preparacion = self._obtener_pedidos_en_preparacion()
-        if not pedidos_en_preparacion:
-            print("\n⚠️ No hay pedidos en preparación")
-            return
-
-        print("\n=== PEDIDOS EN PREPARACIÓN ===")
-        for idx, pedido in enumerate(pedidos_en_preparacion, 1):
-            print(f"\n{idx}. Mesa: {pedido['mesa_nombre']}")
-            print(f"   - {pedido['cantidad']}x {pedido['nombre']}")
-            print(f"   - Mozo: {pedido['mozo']}")
-
-        print("\n0. Volver")
-        try:
-            opcion = int(input("\nSeleccione un pedido para marcar como entregado: "))
-            if opcion == 0:
-                return
-            if 1 <= opcion <= len(pedidos_en_preparacion):
-                pedido = pedidos_en_preparacion[opcion - 1]
-                self._actualizar_estado_pedido(pedido['mesa_id'], pedido['id'], 'entregado')
-            else:
-                print("\n⚠️ Opción inválida")
-        except ValueError:
-            print("\n⚠️ Por favor ingrese un número válido")
-
-    def _obtener_pedidos_en_preparacion(self):
-        """Obtiene los pedidos en preparación."""
-        pedidos_en_preparacion = []
-        for mesa_id, mesa_data in self.sistema_mesas.mesas.items():
-            mesa = mesa_data[0]
-            if mesa['estado'] == 'ocupada':
-                cliente_key = 'cliente_1'
-                for pedido in mesa[cliente_key].get('pedidos', []):
-                    if pedido['estado_cocina'] == self.estados_pedido['en_preparacion']:
-                        pedido_info = {
-                            'id': pedido['id'],
-                            'mesa_id': mesa_id,
-                            'mesa_nombre': mesa['nombre'],
-                            'nombre': pedido['nombre'],
-                            'cantidad': pedido['cantidad'],
-                            'mozo': pedido.get('mozo', 'No asignado')
-                        }
-                        pedidos_en_preparacion.append(pedido_info)
-        return pedidos_en_preparacion
-
-    def mostrar_resumen_mesas(self):
-        """Muestra el resumen de todas las mesas."""
-        print("\n=== RESUMEN DE MESAS ===")
-        
-        for mesa_id, mesa_data in self.sistema_mesas.mesas.items():
-            mesa = mesa_data[0]
-            estado = "🟢 Libre" if mesa['estado'] == 'libre' else "🟠 Ocupada"
-            print(f"\n{mesa['nombre']} [{estado}]")
-            
-            if mesa['estado'] == 'ocupada':
-                self._mostrar_detalles_mesa(mesa_id, mesa)
-
-    def reiniciar_mesa(self):
-        """Reinicia una mesa específica."""
-        mesas_ocupadas = [(mid, m[0]) for mid, m in self.sistema_mesas.mesas.items() if m[0]['estado'] == 'ocupada']
-        if not mesas_ocupadas:
-            print("\n⚠️ No hay mesas ocupadas para reiniciar")
-            return
-
-        print("\n=== REINICIAR MESA ===")
-        for idx, (mid, mesa) in enumerate(mesas_ocupadas, 1):
-            print(f"{idx}. {mesa['nombre']}")
-        print("0. Volver")
-
-        try:
-            opcion = int(input("\nSeleccione la mesa a reiniciar: "))
-            if opcion == 0:
-                return
-            if 1 <= opcion <= len(mesas_ocupadas):
-                mesa_id, mesa = mesas_ocupadas[opcion - 1]
-                print(f"\n⚠️ ¿Está seguro que desea reiniciar la {mesa['nombre']}?")
-                print("1. Sí, reiniciar mesa")
-                print("2. No, volver")
-                confirmacion = input("\nSeleccione una opción: ")
-                if confirmacion == "1":
-                    if self.sistema_mesas.reiniciar_mesa(mesa_id):
-                        print("\n✅ Mesa reiniciada exitosamente")
-                else:
-                    print("\n❌ Operación cancelada")
-            else:
-                print("\n⚠️ Opción inválida")
-        except ValueError:
-            print("\n⚠️ Por favor ingrese un número válido")
-
     def enviar_pedidos_cocina(self, mesa_id, pedidos, mozo):
-        """Envía los pedidos pendientes a cocina."""
+        """Envía los pedidos a cocina."""
         try:
             mesa_data = self.sistema_mesas.obtener_mesa(mesa_id)
             if not mesa_data:
@@ -576,11 +422,18 @@ class SistemaPedidosMozos(BaseVisualizador):
                 if not self.sistema_mesas.ocupar_mesa(mesa_id):
                     raise Exception("Error al ocupar la mesa")
 
-            # Inicializar contador de pedidos si no existe
+            # Inicializar cliente_1 si no existe
             if 'cliente_1' not in mesa:
                 mesa['cliente_1'] = {'pedidos': [], 'contador_pedidos': 0}
             elif 'contador_pedidos' not in mesa['cliente_1']:
                 mesa['cliente_1']['contador_pedidos'] = 0
+
+            # Validar que los pedidos de Take Away tengan nombre de cliente
+            es_take_away = mesa['nombre'] == 'Take Away Barra'
+            if es_take_away:
+                for pedido in pedidos:
+                    if not pedido.get('cliente') or pedido['cliente'] == 'Mesa General':
+                        raise Exception("El nombre del cliente es obligatorio para Take Away")
 
             # Procesar cada pedido
             for pedido in pedidos:
@@ -588,15 +441,21 @@ class SistemaPedidosMozos(BaseVisualizador):
                 mesa['cliente_1']['contador_pedidos'] += 1
                 pedido_id = f"{int(datetime.now().timestamp() * 1000)}_{mesa['cliente_1']['contador_pedidos']}"
                 
+                # Asegurar que usamos el precio unitario correcto
+                precio_unitario = pedido.get('precio_unitario', pedido['precio'])
+                cantidad = pedido['cantidad']
+                
                 # Crear nuevo pedido
                 nuevo_pedido = {
                     'id': pedido_id,
                     'nombre': pedido['nombre'],
-                    'cantidad': pedido['cantidad'],
-                    'precio': pedido['precio'],
+                    'cantidad': cantidad,
+                    'precio': precio_unitario,  # Guardar el precio unitario
+                    'precio_total': precio_unitario * cantidad,  # Calcular y guardar el precio total
                     'hora': datetime.now().strftime('%H:%M'),
-                    'estado_cocina': self.estados_pedido['en_preparacion'],
-                    'mozo': mozo
+                    'estado_cocina': '🟡 Pendiente',
+                    'mozo': mozo,
+                    'cliente': pedido.get('cliente', 'Mesa General')  # Asegurar que siempre haya un valor
                 }
 
                 # Agregar notas si existen
@@ -612,5 +471,5 @@ class SistemaPedidosMozos(BaseVisualizador):
 
             return True
         except Exception as e:
-            print(f"Error al enviar pedidos a cocina: {str(e)}")
+            print(f"⚠️ Error al enviar pedidos: {str(e)}")
             return False 

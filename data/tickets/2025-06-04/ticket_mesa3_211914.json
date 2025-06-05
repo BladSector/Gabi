@@ -1,0 +1,38 @@
+{
+  "ticket_id": "1749082754680_3",
+  "fecha": "2025-06-04",
+  "hora": "21:19:14",
+  "mesa_id": "3",
+  "mesa_nombre": "Mesa 3",
+  "pedidos_por_cliente": {
+    "Mesa General": {
+      "pedidos": [
+        {
+          "id": "1749082447843_1",
+          "nombre": "Jarrito",
+          "cantidad": 3,
+          "precio_unitario": 2300,
+          "precio_total": 6900,
+          "hora": "21:14",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Mesa General",
+          "notas": [
+            {
+              "texto": "Tipo: Lágrima",
+              "hora": "21:14:06"
+            }
+          ]
+        }
+      ],
+      "subtotal": 6900
+    }
+  },
+  "total": 6900,
+  "metodo_pago": "tarjeta",
+  "mozo": "No especificado",
+  "detalles_pago": {
+    "timestamp": 1749082754.68048,
+    "fecha_hora_completa": "2025-06-04 21:19:14.680523"
+  }
+}

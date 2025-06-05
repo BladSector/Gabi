@@ -1,0 +1,32 @@
+{
+  "ticket_id": "1749083083072_9",
+  "fecha": "2025-06-04",
+  "hora": "21:24:43",
+  "mesa_id": "9",
+  "mesa_nombre": "Take Away Barra",
+  "pedidos_por_cliente": {
+    "Santiago 2": {
+      "pedidos": [
+        {
+          "id": "1749083077358_1",
+          "nombre": "COMBO POSITIVO DULCE",
+          "cantidad": 1,
+          "precio_unitario": 4000,
+          "precio_total": 4000,
+          "hora": "21:24",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 2"
+        }
+      ],
+      "subtotal": 4000
+    }
+  },
+  "total": 4000,
+  "metodo_pago": "efectivo",
+  "mozo": "No especificado",
+  "detalles_pago": {
+    "timestamp": 1749083083.072019,
+    "fecha_hora_completa": "2025-06-04 21:24:43.072054"
+  }
+}

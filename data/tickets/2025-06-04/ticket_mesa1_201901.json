@@ -1,0 +1,31 @@
+{
+  "ticket_id": "1749079141495_1",
+  "fecha": "2025-06-04",
+  "hora": "20:19:01",
+  "mesa_id": "1",
+  "mesa_nombre": "Mesa 1",
+  "pedidos_por_cliente": {
+    "Mesa General": {
+      "pedidos": [
+        {
+          "id": "1749078999235_1",
+          "nombre": "COMBO POSITIVO DULCE",
+          "cantidad": 1,
+          "precio": 4000,
+          "hora": "20:16",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Admin",
+          "cliente": "Mesa General"
+        }
+      ],
+      "subtotal": 4000
+    }
+  },
+  "total": 4000,
+  "metodo_pago": "efectivo",
+  "mozo": "No especificado",
+  "detalles_pago": {
+    "timestamp": 1749079141.495795,
+    "fecha_hora_completa": "2025-06-04 20:19:01.495822"
+  }
+}

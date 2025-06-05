@@ -21,7 +21,7 @@ def obtener_carpeta_fecha():
     
     return carpeta_fecha
 
-def guardar_ticket(mesa_id, pedidos, total, metodo_pago, mozo):
+def guardar_ticket(mesa_id, pedidos, total, metodo_pago):
     """Guarda un ticket en la carpeta de la fecha actual"""
     carpeta_fecha = obtener_carpeta_fecha()
     fecha_hora = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -30,7 +30,6 @@ def guardar_ticket(mesa_id, pedidos, total, metodo_pago, mozo):
     ticket = {
         'fecha': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'mesa_id': mesa_id,
-        'mozo': mozo,
         'pedidos': pedidos,
         'total': total,
         'metodo_pago': metodo_pago
@@ -105,27 +104,34 @@ def obtener_detalles_mesa(mesa_id):
             'error': str(e)
         }), 500
 
-@app.route('/api/mozos/pedidos/<pedido_id>/entregar', methods=['PUT'])
-def marcar_pedido_entregado(pedido_id):
+@app.route('/api/mozos/pedidos/<pedido_id>/cancelar', methods=['PUT'])
+def cancelar_pedido(pedido_id):
     try:
         data = request.get_json()
         mesa_id = data.get('mesa_id')
         if not mesa_id:
             return jsonify({'success': False, 'error': 'Falta el id de la mesa'}), 400
-        mesa = sistema_mesas.obtener_mesa(mesa_id)
-        if not mesa:
+        
+        mesa_data = sistema_mesas.obtener_mesa(mesa_id)
+        if not mesa_data:
             return jsonify({'success': False, 'error': 'Mesa no encontrada'}), 404
-        mesa_obj = mesa[0]
-        pedidos = mesa_obj.get('cliente_1', {}).get('pedidos', [])
-        encontrado = False
-        for pedido in pedidos:
-            if pedido['id'] == pedido_id:
-                pedido['estado_cocina'] = '✅ Entregado'
-                pedido['hora_entregado'] = datetime.now().strftime('%H:%M')
-                encontrado = True
-                break
-        if not encontrado:
-            return jsonify({'success': False, 'error': 'Pedido no encontrado'}), 404
+        
+        mesa = mesa_data[0]
+        pedidos = mesa.get('cliente_1', {}).get('pedidos', [])
+        
+        # Encontrar y eliminar el pedido
+        mesa['cliente_1']['pedidos'] = [p for p in pedidos if p['id'] != pedido_id]
+        
+        # Si no quedan pedidos, liberar la mesa
+        if not mesa['cliente_1']['pedidos']:
+            mesa['estado'] = 'libre'
+            mesa['cliente_1'] = {
+                'pedidos': [],
+                'contador_pedidos': 0
+            }
+            mesa['comentarios_camarero'] = []
+            mesa['notificaciones'] = []
+        
         sistema_mesas.guardar_mesas()
         return jsonify({'success': True})
     except Exception as e:
@@ -147,31 +153,6 @@ def enviar_pedidos_cocina(mesa_id):
             'success': False,
             'error': str(e)
         }), 500
-
-@app.route('/api/mozos/pedidos/<pedido_id>/cancelar', methods=['PUT'])
-def cancelar_pedido(pedido_id):
-    try:
-        data = request.get_json()
-        mesa_id = data.get('mesa_id')
-        if not mesa_id:
-            return jsonify({'success': False, 'error': 'Falta el id de la mesa'}), 400
-        mesa = sistema_mesas.obtener_mesa(mesa_id)
-        if not mesa:
-            return jsonify({'success': False, 'error': 'Mesa no encontrada'}), 404
-        mesa_obj = mesa[0]
-        pedidos = mesa_obj.get('cliente_1', {}).get('pedidos', [])
-        encontrado = False
-        for pedido in pedidos:
-            if pedido['id'] == pedido_id:
-                pedido['estado_cocina'] = '🔴 Cancelado'
-                encontrado = True
-                break
-        if not encontrado:
-            return jsonify({'success': False, 'error': 'Pedido no encontrado'}), 404
-        sistema_mesas.guardar_mesas()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/mozos/mesas/<mesa_id>/reiniciar', methods=['PUT'])
 def reiniciar_mesa(mesa_id):
@@ -205,97 +186,110 @@ def obtener_pedidos_mesa(mesa_id):
 def pagar_mesa(mesa_id):
     try:
         data = request.get_json()
-        print("Datos recibidos:", data)
+        print("\n=== INICIO PROCESO DE PAGO ===")
+        print("Datos recibidos del cliente:", data)
         
         if not data:
+            print("Error: No se recibieron datos")
             return jsonify({'success': False, 'error': 'No se proporcionaron datos'}), 400
 
-        mesa_id = data.get('mesa_id')
+        # Extraer y validar datos
+        mesa_id_body = data.get('mesa_id')
         mozo = data.get('mozo')
-        pedidos_ids = data.get('pedidos_ids', [])
+        pedidos_info = data.get('pedidos_ids', [])  # Lista de {id, cantidad}
         metodo_pago = data.get('metodo_pago', 'efectivo')
 
-        print("Mesa ID:", mesa_id)
-        print("Mozo:", mozo)
-        print("Pedidos IDs:", pedidos_ids)
+        print(f"Mesa ID (URL): {mesa_id}")
+        print(f"Mesa ID (Body): {mesa_id_body}")
+        print(f"Mozo: {mozo}")
+        print(f"Pedidos Info: {pedidos_info}")
+        print(f"Método de pago: {metodo_pago}")
 
         if not mesa_id or not mozo:
+            print("Error: Faltan datos requeridos")
             return jsonify({'success': False, 'error': 'Faltan datos requeridos'}), 400
 
         # Obtener datos de la mesa
         mesa_data = sistema_mesas.obtener_mesa(mesa_id)
         if not mesa_data:
+            print(f"Error: Mesa {mesa_id} no encontrada")
             return jsonify({'success': False, 'error': 'Mesa no encontrada'}), 404
 
         mesa = mesa_data[0]
-        print("Datos de la mesa:", mesa)
+        print("\nDatos de la mesa:")
+        print(f"Estado: {mesa['estado']}")
+        print(f"Pedidos actuales: {mesa.get('cliente_1', {}).get('pedidos', [])}")
         
         if 'cliente_1' not in mesa or 'pedidos' not in mesa['cliente_1']:
+            print("Error: No hay pedidos en la mesa")
             return jsonify({'success': False, 'error': 'No hay pedidos en la mesa'}), 400
 
-        # Filtrar pedidos seleccionados
+        # Procesar pedidos seleccionados
         pedidos_a_pagar = []
         total = 0
 
-        # Agrupar pedidos por ID para manejar cantidades
-        pedidos_por_id = {}
-        for pedido_id in pedidos_ids:
-            if pedido_id not in pedidos_por_id:
-                pedidos_por_id[pedido_id] = 0
-            pedidos_por_id[pedido_id] += 1
-
-        print("Pedidos agrupados por ID:", pedidos_por_id)
+        # Crear un diccionario para acceso rápido a la información de cantidad a pagar
+        cantidades_a_pagar = {p['id']: p['cantidad'] for p in pedidos_info}
 
         # Procesar cada pedido original
         for pedido in mesa['cliente_1']['pedidos']:
-            print("Procesando pedido:", pedido)
-            if pedido['id'] in pedidos_por_id and pedido['estado_cocina'] == '✅ Entregado':
-                cantidad_a_pagar = pedidos_por_id[pedido['id']]
+            print(f"\nProcesando pedido: {pedido['id']}")
+            print(f"Estado actual: {pedido['estado_cocina']}")
+            
+            if pedido['id'] in cantidades_a_pagar and pedido['estado_cocina'] == '🟡 Pendiente':
+                cantidad_a_pagar = cantidades_a_pagar[pedido['id']]
                 cantidad_original = pedido['cantidad']
+                precio_unitario = pedido['precio']  # El precio en el pedido ya es unitario
                 
-                # Si se paga la cantidad total
-                if cantidad_a_pagar == cantidad_original:
-                    pedido['estado_cocina'] = '💰 Pagado'
-                    pedidos_a_pagar.append(pedido.copy())
-                    total += pedido['precio'] * cantidad_a_pagar
-                # Si se paga parcialmente
-                else:
-                    # Crear una copia del pedido para el pago
+                print(f"Cantidad a pagar: {cantidad_a_pagar}")
+                print(f"Cantidad original: {cantidad_original}")
+                print(f"Precio unitario: ${precio_unitario}")
+                
+                if cantidad_a_pagar > 0 and cantidad_a_pagar <= cantidad_original:
+                    # Calcular precio total para la cantidad a pagar
+                    precio_total = precio_unitario * cantidad_a_pagar
+                    
+                    # Crear pedido para el pago
                     pedido_pago = pedido.copy()
                     pedido_pago['cantidad'] = cantidad_a_pagar
+                    pedido_pago['precio'] = precio_unitario  # Mantener precio unitario
                     pedidos_a_pagar.append(pedido_pago)
-                    total += pedido['precio'] * cantidad_a_pagar
+                    total += precio_total
                     
                     # Actualizar el pedido original
                     pedido['cantidad'] = cantidad_original - cantidad_a_pagar
-                    # Si quedan unidades, mantener el estado como entregado
                     if pedido['cantidad'] > 0:
-                        pedido['estado_cocina'] = '✅ Entregado'
+                        print(f"Quedan {pedido['cantidad']} unidades pendientes a ${precio_unitario} cada una")
                     else:
                         pedido['estado_cocina'] = '💰 Pagado'
+                        print("Pedido completamente pagado")
 
-                print("Pedido procesado:", pedido)
-                print("Pedido a pagar:", pedidos_a_pagar[-1])
+                print(f"Pedido procesado - Nuevo estado: {pedido['estado_cocina']}")
+                print(f"Subtotal para este ítem: ${precio_total}")
 
-        print("Pedidos a pagar:", pedidos_a_pagar)
-        print("Total:", total)
+        print("\nResumen de pago:")
+        print(f"Pedidos a pagar: {len(pedidos_a_pagar)}")
+        print(f"Total: ${total}")
 
         if not pedidos_a_pagar:
+            print("Error: No hay pedidos válidos para pagar")
             return jsonify({'success': False, 'error': 'No hay pedidos válidos para pagar'}), 400
 
-        # Registrar el pago en el sistema original
+        # Registrar el pago en el sistema
+        print("\nRegistrando pago en el sistema...")
         sistema_pedidos._registrar_pago(mesa_id, mesa, pedidos_a_pagar, total, metodo_pago)
 
         # Verificar si quedan pedidos por pagar
         pedidos_restantes = [p for p in mesa['cliente_1']['pedidos'] 
-                           if p['estado_cocina'] == '✅ Entregado' 
-                           and p['estado_cocina'] != '🔴 Cancelado'
-                           and p['estado_cocina'] != '💰 Pagado']
+                           if p['estado_cocina'] == '🟡 Pendiente' 
+                           and p['cantidad'] > 0]
+
+        print(f"\nPedidos restantes: {len(pedidos_restantes)}")
 
         # Si no quedan pedidos por pagar, limpiar la mesa
         if not pedidos_restantes:
+            print("No quedan pedidos - Liberando mesa")
             mesa['estado'] = 'libre'
-            # Limpiar los datos de la mesa
             mesa['cliente_1'] = {
                 'pedidos': [],
                 'contador_pedidos': 0
@@ -304,9 +298,12 @@ def pagar_mesa(mesa_id):
             mesa['notificaciones'] = []
 
         # Guardar cambios
+        print("\nGuardando cambios...")
         if not sistema_mesas.guardar_mesas():
+            print("Error: No se pudieron guardar los cambios")
             return jsonify({'success': False, 'error': 'Error al guardar los cambios'}), 500
 
+        print("\n=== FIN PROCESO DE PAGO ===")
         return jsonify({
             'success': True,
             'message': 'Pago procesado exitosamente',
@@ -315,7 +312,11 @@ def pagar_mesa(mesa_id):
         })
 
     except Exception as e:
-        print("Error en pagar_mesa:", str(e))
+        print("\n=== ERROR EN PROCESO DE PAGO ===")
+        print(f"Error: {str(e)}")
+        import traceback
+        print("Traceback completo:")
+        print(traceback.format_exc())
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':

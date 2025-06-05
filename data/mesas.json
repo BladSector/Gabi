@@ -2,10 +2,21 @@
   "1": [
     {
       "nombre": "Mesa 1",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749082517629_1",
+            "nombre": "COMBO POSITIVO DULCE",
+            "cantidad": 1,
+            "precio": 4000,
+            "hora": "21:15",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          }
+        ],
+        "contador_pedidos": 1
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -61,7 +72,7 @@
   ],
   "6": [
     {
-      "nombre": "Barra interior",
+      "nombre": "Mesa 6",
       "estado": "libre",
       "cliente_1": {
         "pedidos": [],
@@ -73,7 +84,31 @@
   ],
   "7": [
     {
+      "nombre": "Barra interior",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "8": [
+    {
       "nombre": "Barra exterior",
+      "estado": "libre",
+      "cliente_1": {
+        "pedidos": [],
+        "contador_pedidos": 0
+      },
+      "comentarios_camarero": [],
+      "notificaciones": []
+    }
+  ],
+  "9": [
+    {
+      "nombre": "Take Away Barra",
       "estado": "libre",
       "cliente_1": {
         "pedidos": [],

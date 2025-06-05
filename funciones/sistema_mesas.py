@@ -85,7 +85,7 @@ class SistemaMesas:
                 }
             }],
             '6': [{
-                'nombre': 'Barra interior',
+                'nombre': 'Mesa 6',
                 'estado': 'libre',
                 'cliente_1': {
                     'pedidos': [],
@@ -93,11 +93,28 @@ class SistemaMesas:
                 }
             }],
             '7': [{
+                'nombre': 'Barra interior',
+                'estado': 'libre',
+                'cliente_1': {
+                    'pedidos': [],
+                    'contador_pedidos': 0
+                }
+            }],
+            '8': [{
                 'nombre': 'Barra exterior',
                 'estado': 'libre',
                 'cliente_1': {
                     'pedidos': [],
                     'contador_pedidos': 0
+                }
+            }],
+            '9': [{
+                'nombre': 'Take Away Barra',
+                'estado': 'libre',
+                'cliente_1': {
+                    'pedidos': [],
+                    'contador_pedidos': 0,
+                    'es_take_away': True  # Indicador para Take Away Barra
                 }
             }]
         }
@@ -250,7 +267,6 @@ class SistemaMesas:
         for mesa_id, mesa_data in self.mesas.items():
             mesa = mesa_data[0]
             pedidos_en_cocina = []
-            pedidos_entregados = []
             
             # Procesar pedidos del cliente_1
             for pedido in mesa.get('cliente_1', {}).get('pedidos', []):
@@ -258,24 +274,22 @@ class SistemaMesas:
                     'id': pedido['id'],
                     'nombre': pedido['nombre'],
                     'cantidad': pedido['cantidad'],
-                    'cliente': 'Cliente 1',
+                    'cliente': pedido.get('cliente', 'Mesa General'),  # Agregar nombre del cliente
                     'estado_cocina': pedido['estado_cocina'],
                     'hora_envio': pedido['hora'],
                     'notas': pedido.get('notas', []),
                     'mozo': pedido.get('mozo', 'Sin asignar')
                 }
                 
-                if pedido['estado_cocina'] == '👨‍🍳 En preparación':
+                if pedido['estado_cocina'] == '🟡 Pendiente':
                     pedidos_en_cocina.append(pedido_info)
-                elif pedido['estado_cocina'] == '✅ Entregado':
-                    pedidos_entregados.append(pedido_info)
             
             mesas_info.append({
                 'id': mesa_id,
                 'nombre': mesa['nombre'],
                 'estado': mesa['estado'],
-                'pedidos_en_cocina': pedidos_en_cocina,
-                'pedidos_entregados': pedidos_entregados
+                'es_take_away': mesa.get('cliente_1', {}).get('es_take_away', False),  # Agregar indicador de Take Away
+                'pedidos_en_cocina': pedidos_en_cocina
             })
         
         return mesas_info 

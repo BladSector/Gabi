@@ -1,0 +1,76 @@
+{
+  "ticket_id": "1749083051664_9",
+  "fecha": "2025-06-04",
+  "hora": "21:24:11",
+  "mesa_id": "9",
+  "mesa_nombre": "Take Away Barra",
+  "pedidos_por_cliente": {
+    "Santiago 1": {
+      "pedidos": [
+        {
+          "id": "1749082843532_3",
+          "nombre": "Sándwich completo",
+          "cantidad": 1,
+          "precio_unitario": 4200,
+          "precio_total": 4200,
+          "hora": "21:20",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 1"
+        },
+        {
+          "id": "1749082843532_4",
+          "nombre": "Medialuna",
+          "cantidad": 1,
+          "precio_unitario": 800,
+          "precio_total": 800,
+          "hora": "21:20",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 1"
+        },
+        {
+          "id": "1749083012966_5",
+          "nombre": "Sándwich completo",
+          "cantidad": 1,
+          "precio_unitario": 4200,
+          "precio_total": 4200,
+          "hora": "21:23",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 1"
+        },
+        {
+          "id": "1749083028289_6",
+          "nombre": "Sándwich completo",
+          "cantidad": 1,
+          "precio_unitario": 4200,
+          "precio_total": 4200,
+          "hora": "21:23",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 1"
+        },
+        {
+          "id": "1749083041711_7",
+          "nombre": "COMBO POSITIVO DULCE",
+          "cantidad": 1,
+          "precio_unitario": 4000,
+          "precio_total": 4000,
+          "hora": "21:24",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Santiago 1"
+        }
+      ],
+      "subtotal": 17400
+    }
+  },
+  "total": 17400,
+  "metodo_pago": "efectivo",
+  "mozo": "No especificado",
+  "detalles_pago": {
+    "timestamp": 1749083051.664688,
+    "fecha_hora_completa": "2025-06-04 21:24:11.664792"
+  }
+}
