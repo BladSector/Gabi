@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 echo ===================================
 echo Iniciando Sistema de Restaurante
 echo ===================================
@@ -52,6 +53,10 @@ if not exist "venv" (
 
 REM Activar entorno virtual
 call venv\Scripts\activate
+
+REM Configurar variables de entorno para UTF-8
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
 
 REM Instalar/Actualizar dependencias
 echo Instalando/Actualizando dependencias...
