@@ -14,10 +14,50 @@
   "2": [
     {
       "nombre": "Mesa 2",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749253959287_1",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749253959287_2",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749253959287_3",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: Con leche",
+                "hora": "20:52:37"
+              }
+            ]
+          }
+        ],
+        "contador_pedidos": 3
       },
       "comentarios_camarero": [],
       "notificaciones": []
