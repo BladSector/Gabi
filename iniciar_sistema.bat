@@ -73,6 +73,14 @@ echo El sistema estará disponible en: http://localhost:5000
 echo.
 echo Para cerrar el sistema, presione Ctrl+C
 echo.
+
+REM Esperar 2 segundos para que el servidor inicie
+timeout /t 2 /nobreak > nul
+
+REM Abrir el navegador
+start http://localhost:5000
+
+REM Iniciar el servidor
 python app.py
 
 pause 
