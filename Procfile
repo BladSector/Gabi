@@ -1,1 +1,0 @@
-web: python -m pip install --upgrade pip && gunicorn app:app 

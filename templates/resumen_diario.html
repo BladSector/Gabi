@@ -147,13 +147,13 @@ function actualizarResumen() {
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar fecha y hora
     actualizarFechaHora();
-    // Actualizar la hora cada minuto
-    setInterval(actualizarFechaHora, 60000);
+    // Actualizar la hora cada 2 segundos
+    setInterval(actualizarFechaHora, 2000);
     
     // Cargar datos iniciales
     actualizarResumen();
-    // Actualizar datos cada 3 segundos
-    setInterval(actualizarResumen, 3000);
+    // Actualizar datos cada 2 segundos
+    setInterval(actualizarResumen, 2000);
 });
 </script>
 {% endblock %} 

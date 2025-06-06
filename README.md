@@ -1,3 +1,77 @@
+# Sistema de Restaurante
+
+## Requisitos Previos
+1. Python 3.8 o superior
+   - Descargar de: https://www.python.org/downloads/
+   - **IMPORTANTE**: Durante la instalación, marcar la opción "Add Python to PATH"
+2. Git
+   - Descargar de: https://git-scm.com/downloads
+   - Necesario para las actualizaciones automáticas
+
+## Configuración Inicial (Solo para el desarrollador)
+1. Crear un repositorio en GitHub
+2. Modificar el archivo `iniciar_sistema.bat` y reemplazar `TU_USUARIO` con tu nombre de usuario de GitHub
+3. Subir el código inicial:
+   ```bash
+   git init
+   git add .
+   git commit -m "Versión inicial"
+   git branch -M main
+   git remote add origin https://github.com/TU_USUARIO/sistema-restaurante.git
+   git push -u origin main
+   ```
+
+## Instrucciones de Instalación
+
+### Método Simple (Recomendado)
+1. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
+2. El script se encargará de:
+   - Verificar que Python y Git estén instalados
+   - Descargar la última versión del código desde GitHub
+   - Crear un entorno virtual
+   - Instalar todas las dependencias necesarias
+   - Iniciar el sistema
+
+### Método Manual
+Si prefiere instalar manualmente:
+1. Abra una terminal en esta carpeta
+2. Clone el repositorio: `git clone https://github.com/TU_USUARIO/sistema-restaurante.git`
+3. Cree un entorno virtual: `python -m venv venv`
+4. Active el entorno virtual:
+   - Windows: `venv\Scripts\activate`
+   - Linux/Mac: `source venv/bin/activate`
+5. Instale las dependencias: `pip install -r requirements.txt`
+6. Inicie el sistema: `python app.py`
+
+## Actualizaciones
+- El sistema verificará automáticamente si hay actualizaciones cada vez que se inicie
+- Para actualizar manualmente en cualquier momento:
+  1. Cierre el sistema si está en ejecución
+  2. Vuelva a ejecutar `iniciar_sistema.bat`
+
+## Desarrollo y Modificaciones
+Para hacer cambios en el sistema:
+1. Realice sus modificaciones en la PC principal
+2. Suba los cambios a GitHub:
+   ```bash
+   git add .
+   git commit -m "Descripción de los cambios"
+   git push origin main
+   ```
+3. En las PCs que ejecuten el sistema, los cambios se descargarán automáticamente al iniciar
+
+## Uso del Sistema
+1. Una vez iniciado, abra su navegador web
+2. Vaya a: http://localhost:5000
+3. El sistema estará listo para usar
+
+## Solución de Problemas
+- Si recibe un error de Python no encontrado, asegúrese de que Python esté instalado y agregado al PATH
+- Si recibe un error de Git no encontrado, asegúrese de que Git esté instalado
+- Si hay problemas con los permisos, intente ejecutar el script como administrador
+- Para problemas con las actualizaciones, verifique su conexión a internet
+- Para cualquier otro error, verifique que todos los archivos estén en su lugar
+
 # Sistema de Restaurante - Guía de Uso
 
 ## 📱 Acceso a la Aplicación

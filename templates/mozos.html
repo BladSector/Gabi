@@ -229,13 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar mapa de mesas inicial
     actualizarMapaMesas();
     
-    // Actualización automática cada 4 segundos
-    setInterval(actualizarMapaMesas, 4000);
+    // Actualización automática cada 2 segundos
+    setInterval(actualizarMapaMesas, 2000);
 
     // Iniciar actualización de fecha y hora
     actualizarFechaHora();
-    // Actualizar la hora cada 3 segundos
-    setInterval(actualizarFechaHora, 3000);
+    // Actualizar la hora cada 2 segundos
+    setInterval(actualizarFechaHora, 2000);
 });
 
 function cambiarModo() {
@@ -574,6 +574,24 @@ function agregarPedidoConNota(plato, nota = null) {
     
     pedidosPendientes.push(pedido);
     actualizarPedidosPendientes();
+    
+    // Mostrar feedback de éxito
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    Toast.fire({
+        icon: 'success',
+        title: `✅ ${pedido.cantidad}x ${pedido.nombre} agregado`
+    });
 }
 
 function actualizarPedidosPendientes() {
@@ -1229,7 +1247,7 @@ function mostrarResumenDiario() {
     // Obtener la fecha actual
     const fecha = new Date();
     const fechaFormateada = fecha.toLocaleDateString('es-AR');
-    const horaFormateada = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: undefined });
+    const horaFormateada = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: undefined, hour12: false });
     
     // Actualizar fecha y hora en el modal
     document.getElementById('resumenFecha').textContent = fechaFormateada;
@@ -1322,7 +1340,7 @@ function actualizarFechaHora() {
     const opciones = { 
         hour: '2-digit', 
         minute: '2-digit', 
-        hour12: true 
+        hour12: false 
     };
     
     // Formatear fecha como DD/MM/YYYY
@@ -1331,8 +1349,8 @@ function actualizarFechaHora() {
     const año = ahora.getFullYear();
     const fechaFormateada = `${dia}/${mes}/${año}`;
     
-    // Formatear hora con AM/PM
-    const horaFormateada = ahora.toLocaleTimeString('es-AR', opciones).toLowerCase();
+    // Formatear hora en formato 24 horas
+    const horaFormateada = ahora.toLocaleTimeString('es-AR', opciones);
     
     document.getElementById('fechaActual').textContent = `📅 Fecha: ${fechaFormateada}`;
     document.getElementById('horaActual').textContent = `🕒 Hora: ${horaFormateada}`;
