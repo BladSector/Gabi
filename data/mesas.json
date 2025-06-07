@@ -26,22 +26,10 @@
   "2": [
     {
       "nombre": "Mesa 2",
-      "estado": "ocupada",
+      "estado": "libre",
       "cliente_1": {
-        "pedidos": [
-          {
-            "id": "1749256462279_1",
-            "nombre": "COMBO POSITIVO DULCE",
-            "cantidad": 1,
-            "precio": 4000,
-            "precio_total": 4000,
-            "hora": "21:34",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          }
-        ],
-        "contador_pedidos": 1
+        "pedidos": [],
+        "contador_pedidos": 0
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -50,22 +38,10 @@
   "3": [
     {
       "nombre": "Mesa 3",
-      "estado": "ocupada",
+      "estado": "libre",
       "cliente_1": {
-        "pedidos": [
-          {
-            "id": "1749253505430_1",
-            "nombre": "COMBO POSITIVO DULCE",
-            "cantidad": 1,
-            "precio": 4000,
-            "precio_total": 4000,
-            "hora": "20:45",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          }
-        ],
-        "contador_pedidos": 1
+        "pedidos": [],
+        "contador_pedidos": 0
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -95,7 +71,7 @@
             "precio": 4000,
             "precio_total": 4000,
             "hora": "21:24",
-            "estado_cocina": "🟡 Pendiente",
+            "estado_cocina": "💰 Pagado",
             "mozo": "Mozo",
             "cliente": "Mesa General"
           }
@@ -109,22 +85,10 @@
   "5": [
     {
       "nombre": "Mesa 5",
-      "estado": "ocupada",
+      "estado": "libre",
       "cliente_1": {
-        "pedidos": [
-          {
-            "id": "1749256468591_1",
-            "nombre": "COMBO POSITIVO SALADO",
-            "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "21:34",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          }
-        ],
-        "contador_pedidos": 1
+        "pedidos": [],
+        "contador_pedidos": 0
       },
       "comentarios_camarero": [],
       "notificaciones": []

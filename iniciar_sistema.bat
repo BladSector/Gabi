@@ -36,17 +36,14 @@ if not exist ".git" (
 REM Verificar actualizaciones
 echo Verificando actualizaciones...
 git fetch origin
-
-REM Guardar cambios locales temporalmente
-echo Guardando cambios locales...
-git stash push --include-untracked
-
-REM Actualizar desde el repositorio
-git pull origin main
-
-REM Restaurar cambios locales
-echo Restaurando cambios locales...
-git stash pop
+git status | findstr "behind" > nul
+if not errorlevel 1 (
+    echo Se encontraron actualizaciones. Descargando...
+    git pull origin main
+    echo Actualizaciones instaladas correctamente.
+) else (
+    echo El sistema está actualizado.
+)
 
 REM Crear entorno virtual si no existe
 if not exist "venv" (
