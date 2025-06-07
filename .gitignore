@@ -28,11 +28,3 @@ Thumbs.db
 # Ignorar todo en la carpeta data
 data/*
 
-# Pero mantener las carpetas necesarias (vacías)
-!data/
-!data/tickets/
-!data/tickets/.gitkeep
-!data/historial/
-!data/historial/.gitkeep
-!data/menu.json
-!data/mesas.json 

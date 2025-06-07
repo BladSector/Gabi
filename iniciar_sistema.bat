@@ -34,21 +34,6 @@ pip install -r requirements.txt
 REM Intentar actualizar desde GitHub
 echo.
 echo Buscando actualizaciones...
-
-REM Guardar una copia de mesas.json
-if exist data\mesas.json (
-    echo Respaldando configuración de mesas...
-    if not exist data\backup (
-        mkdir data\backup
-    )
-    copy /Y data\mesas.json data\backup\mesas.json >nul 2>&1
-)
-
-REM Forzar el descarte de cambios locales en archivos específicos
-git checkout -- funciones/__pycache__/* >nul 2>&1
-git checkout -- data/mesas.json >nul 2>&1
-
-REM Intentar actualizar
 git fetch origin main
 git rev-parse HEAD >temp1
 git rev-parse origin/main >temp2
@@ -67,18 +52,14 @@ if errorlevel 1 (
     )
     
     REM Proceder con la actualización
-    echo Actualizando sistema...
-    
-    REM Forzar la actualización ignorando cambios locales
-    git reset --hard HEAD
-    git pull origin main --force
-    
-    REM Restaurar solo mesas.json
-    if exist data\backup\mesas.json (
-        echo Restaurando configuración de mesas...
-        copy /Y data\backup\mesas.json data\mesas.json >nul 2>&1
+    git pull origin main
+    if errorlevel 1 (
+        echo.
+        echo Error al actualizar. Por favor, contacte al administrador.
+        del temp1 temp2
+        pause
+        exit /b 1
     )
-    
     echo.
     echo Sistema actualizado exitosamente.
 ) else (
@@ -86,11 +67,6 @@ if errorlevel 1 (
 )
 
 del temp1 temp2
-
-REM Limpiar archivos de respaldo
-if exist data\backup (
-    rmdir /S /Q data\backup >nul 2>&1
-)
 
 REM Iniciar el sistema
 echo.
