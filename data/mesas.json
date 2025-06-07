@@ -6,12 +6,12 @@
       "cliente_1": {
         "pedidos": [
           {
-            "id": "1749255824268_1",
-            "nombre": "COMBO POSITIVO SALADO",
+            "id": "1749261244467_1",
+            "nombre": "Ensalada cesar con pollo",
             "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "21:23",
+            "precio": 7000,
+            "precio_total": 7000,
+            "hora": "22:54",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
@@ -26,10 +26,39 @@
   "2": [
     {
       "nombre": "Mesa 2",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749260670367_1",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "22:44",
+            "estado_cocina": "💰 Pagado",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749260670367_2",
+            "nombre": "Pocillo",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 6900,
+            "hora": "22:44",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: Cortado",
+                "hora": "22:44:18"
+              }
+            ]
+          }
+        ],
+        "contador_pedidos": 2
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -51,9 +80,20 @@
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
+          },
+          {
+            "id": "1749260553257_2",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "22:42",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
           }
         ],
-        "contador_pedidos": 1
+        "contador_pedidos": 2
       },
       "comentarios_camarero": [],
       "notificaciones": []

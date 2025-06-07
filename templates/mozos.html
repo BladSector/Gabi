@@ -3,38 +3,40 @@
 {% block title %}Vista Mozos - Sistema de Restaurante{% endblock %}
 
 {% block content %}
-<!-- Modal para gestionar pedidos de mesa -->
+<!-- Modal para gestionar pedidos -->
 <div class="modal fade" id="pedidosMesaModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Gestionar Pedidos - <span id="numeroMesaActual"></span></h5>
+                <h5 class="modal-title">Gestionar Pedidos - Mesa <span id="numeroMesaActual"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h6 class="mb-0">Menú</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="list-group" id="listaMenu">
-                                    <!-- El menú se cargará dinámicamente -->
-                                </div>
-                            </div>
+                        <!-- Campo de búsqueda -->
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">🔍</span>
+                            <input type="text" class="form-control" id="buscarPlato" placeholder="Buscar platos..." onkeyup="filtrarPlatos(this.value)">
+                        </div>
+                        <!-- Lista del menú -->
+                        <div id="listaMenu">
+                            <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card">
                             <div class="card-header">
-                                <h6 class="mb-0">Pedidos Pendientes</h6>
+                                <h5 class="card-title mb-0">Pedidos Pendientes</h5>
                             </div>
-                            <div class="card-body">
-                                <div id="pedidosPendientes">
-                                    <!-- Los pedidos pendientes se cargarán dinámicamente -->
+                            <div class="card-body p-2">
+                                <!-- Contenedor de pedidos pendientes -->
+                                <div id="pedidosPendientesContainer">
+                                    <p class="text-muted text-center">No hay pedidos pendientes</p>
                                 </div>
-                                <button class="btn btn-success w-100 mt-3" onclick="enviarPedidosCocina()">
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-primary w-100" onclick="enviarPedidosCocina()">
                                     Enviar a Cocina
                                 </button>
                             </div>
@@ -448,56 +450,99 @@ function confirmarNombreCliente() {
     document.getElementById('nombreCliente').value = '';
 }
 
+function normalizarTexto(texto) {
+    return texto.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+                .toLowerCase()
+                .trim();
+}
+
+function filtrarPlatos(busqueda) {
+    busqueda = normalizarTexto(busqueda);
+    const categorias = document.querySelectorAll('.categoria-menu');
+    
+    categorias.forEach(categoria => {
+        let tieneItemsVisibles = false;
+        const itemsCategoria = categoria.querySelectorAll('.item-menu');
+        
+        itemsCategoria.forEach(item => {
+            const nombre = normalizarTexto(item.dataset.nombre);
+            const descripcion = normalizarTexto(item.dataset.descripcion);
+            const coincide = nombre.includes(busqueda) || descripcion.includes(busqueda);
+            
+            item.style.display = coincide ? '' : 'none';
+            if (coincide) tieneItemsVisibles = true;
+        });
+        
+        // Mostrar/ocultar categoría completa
+        categoria.style.display = tieneItemsVisibles ? '' : 'none';
+    });
+}
+
 function continuarAbrirGestionPedidos() {
-    // Cargar el menú
     fetch('/api/menu')
         .then(response => response.json())
         .then(data => {
-            menuCompleto = data.menu;
-            const listaMenu = document.getElementById('listaMenu');
+            if (!data.success) {
+                console.error('Error al cargar el menú:', data.error);
+                return;
+            }
             
-            // Función para generar el HTML de una categoría
-            const generarCategoriaHTML = (titulo, platos, emoji) => {
-                console.log(`Generando categoría ${titulo}:`, platos); // Log para cada categoría
-                return `
-                    <div class="card mb-3">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0">${emoji} ${titulo}</h6>
+            menuCompleto = data.menu;
+            
+            // Generar HTML para cada categoría
+            let menuHTML = '';
+            for (const categoria in data.menu) {
+                const items = data.menu[categoria];
+                if (items.length === 0) continue;
+                
+                menuHTML += `
+                    <div class="card mb-3 categoria-menu" data-categoria="${categoria}">
+                        <div class="card-header">
+                            <h6 class="mb-0">${obtenerEmojiCategoria(categoria)} ${categoria.toUpperCase()}</h6>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="list-group list-group-flush">
-                                ${platos.map(plato => `
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1">${plato.nombre}</h6>
-                                                ${plato.descripcion && plato.descripcion.length > 0 ? `
-                                                    <p class="text-muted mb-1 small">${plato.descripcion.join(' | ')}</p>
-                                                ` : ''}
-                                                <small class="text-muted">$${plato.precio}</small>
-                                            </div>
-                                            <button class="btn btn-primary btn-sm ms-2" onclick="agregarPedido('${plato.id}')">
-                                                Agregar
-                                            </button>
-                                        </div>
+                        <div class="card-body">
+                            <div class="row row-cols-1 row-cols-md-2 g-2">
+                `;
+                
+                items.forEach(item => {
+                    if (item.disponible) {
+                        // Guardar tanto la versión original como la normalizada del nombre y descripción
+                        const nombreOriginal = item.nombre;
+                        const descripcionOriginal = (item.descripcion || []).join(', ');
+                        
+                        menuHTML += `
+                            <div class="col item-menu" 
+                                 data-nombre="${nombreOriginal.toLowerCase()}"
+                                 data-nombre-norm="${normalizarTexto(nombreOriginal)}"
+                                 data-descripcion="${descripcionOriginal.toLowerCase()}"
+                                 data-descripcion-norm="${normalizarTexto(descripcionOriginal)}">
+                                <div class="card h-100">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1">${nombreOriginal}</h6>
+                                        ${descripcionOriginal ? 
+                                            `<p class="card-text small text-muted mb-1">${descripcionOriginal}</p>` : ''}
+                                        <p class="card-text">
+                                            <small class="text-primary">$${item.precio}</small>
+                                        </p>
+                                        <button class="btn btn-sm btn-outline-primary w-100" onclick="agregarPedido(${item.id})">
+                                            Agregar
+                                        </button>
                                     </div>
-                                `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                menuHTML += `
                             </div>
                         </div>
                     </div>
                 `;
-            };
-
-            // Generar el HTML completo del menú
-            const menuHTML = `
-                ${menuCompleto.combos ? generarCategoriaHTML('Combos', menuCompleto.combos, '🍽️') : ''}
-                ${menuCompleto.cafeteria ? generarCategoriaHTML('Cafetería', menuCompleto.cafeteria, '☕') : ''}
-                ${menuCompleto.bebidas ? generarCategoriaHTML('Bebidas', menuCompleto.bebidas, '🥤') : ''}
-                ${menuCompleto.salados ? generarCategoriaHTML('Salados', menuCompleto.salados, '🥪') : ''}
-                ${menuCompleto.dulces ? generarCategoriaHTML('Dulces', menuCompleto.dulces, '🍰') : ''}
-            `;
+            }
             
-            console.log('HTML generado:', menuHTML); // Log para ver el HTML generado
+            console.log('HTML generado:', menuHTML);
             listaMenu.innerHTML = menuHTML;
             
             // Mostrar el modal
@@ -507,6 +552,8 @@ function continuarAbrirGestionPedidos() {
             document.getElementById('pedidosMesaModal').addEventListener('hidden.bs.modal', function () {
                 resetearEstadoPedidos();
                 actualizarPedidosPendientes();
+                // Limpiar campo de búsqueda al cerrar
+                document.getElementById('buscarPlato').value = '';
             });
             
             pedidosMesaModal.show();
@@ -567,6 +614,67 @@ function agregarPedidoConNota(plato, nota = null) {
         return;
     }
 
+    // Verificar si el plato ya está en pedidos pendientes
+    const pedidoExistente = pedidosPendientes.find(p => p.plato_id === plato.id);
+    
+    if (pedidoExistente) {
+        // Mostrar modal para aumentar cantidad
+        Swal.fire({
+            title: 'Plato ya agregado',
+            html: `
+                <div class="text-center">
+                    <p class="mb-3">${plato.nombre} ya está en tu pedido.</p>
+                    <p class="mb-3">Cantidad actual: ${pedidoExistente.cantidad}</p>
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                        <button class="btn btn-outline-primary" onclick="cambiarCantidad(-1)">-</button>
+                        <input type="number" id="nuevaCantidad" class="form-control text-center" 
+                               style="width: 80px" value="${pedidoExistente.cantidad}" min="1">
+                        <button class="btn btn-outline-primary" onclick="cambiarCantidad(1)">+</button>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                // Agregar event listeners para los botones + y -
+                window.cambiarCantidad = (delta) => {
+                    const input = document.getElementById('nuevaCantidad');
+                    const nuevoValor = Math.max(1, parseInt(input.value) + delta);
+                    input.value = nuevoValor;
+                };
+
+                // Agregar validación al input
+                const input = document.getElementById('nuevaCantidad');
+                input.addEventListener('change', () => {
+                    input.value = Math.max(1, parseInt(input.value) || 1);
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const nuevaCantidad = parseInt(document.getElementById('nuevaCantidad').value);
+                if (nuevaCantidad > 0) {
+                    pedidoExistente.cantidad = nuevaCantidad;
+                    actualizarPedidosPendientes();
+                    
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: `✅ Cantidad actualizada: ${nuevaCantidad}x ${plato.nombre}`
+                    });
+                }
+            }
+        });
+        return;
+    }
+
     const pedido = {
         id: `${Date.now()}_${contadorPedidos++}`,
         plato_id: plato.id,
@@ -603,13 +711,15 @@ function agregarPedidoConNota(plato, nota = null) {
 }
 
 function actualizarPedidosPendientes() {
-    const contenedor = document.getElementById('pedidosPendientes');
+    const contenedor = document.getElementById('pedidosPendientesContainer');
+    if (!contenedor) return;
+
     if (pedidosPendientes.length === 0) {
-        contenedor.innerHTML = '<p class="text-muted">No hay pedidos pendientes</p>';
+        contenedor.innerHTML = '<p class="text-muted text-center">No hay pedidos pendientes</p>';
         return;
     }
-    
-    // Agrupar pedidos por cliente
+
+    // Agrupar pedidos por cliente si es Take Away
     const pedidosPorCliente = {};
     pedidosPendientes.forEach(pedido => {
         const cliente = pedido.cliente || 'Mesa General';
@@ -618,54 +728,87 @@ function actualizarPedidosPendientes() {
         }
         pedidosPorCliente[cliente].push(pedido);
     });
-    
-    contenedor.innerHTML = Object.entries(pedidosPorCliente).map(([cliente, pedidos]) => `
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h6 class="mb-0">Cliente: ${cliente}</h6>
-            </div>
+
+    const html = Object.entries(pedidosPorCliente).map(([cliente, pedidos]) => `
+        <div class="card mb-2">
+            ${esTakeAway ? `
+                <div class="card-header py-2">
+                    <h6 class="mb-0">Cliente: ${cliente}</h6>
+                </div>
+            ` : ''}
             <div class="card-body p-2">
                 ${pedidos.map(pedido => `
-                    <div class="card mb-2">
-                        <div class="card-body p-2">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">${pedido.nombre}</h6>
-                                    ${pedido.notas && pedido.notas.length > 0 ? 
-                                        `<small class="text-primary">${pedido.notas[0].texto}</small>` : ''}
-                                    <small class="text-muted d-block">
-                                        Precio unitario: $${pedido.precio} | 
-                                        Total: $${(pedido.precio * pedido.cantidad).toFixed(2)}
-                                    </small>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <input type="number" class="form-control form-control-sm me-2" 
-                                           style="width: 60px" value="${pedido.cantidad}" 
-                                           onchange="actualizarCantidad('${pedido.id}', this.value)">
-                                    <button class="btn btn-danger btn-sm" onclick="eliminarPedidoPendiente('${pedido.id}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
+                    <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
+                        <div>
+                            <h6 class="mb-1">${pedido.nombre}</h6>
+                            ${pedido.notas && pedido.notas.length > 0 ? 
+                                `<small class="text-primary d-block">${pedido.notas[0].texto}</small>` : ''}
+                            <small class="text-muted d-block">
+                                $${pedido.precio} c/u | Total: $${(pedido.precio * pedido.cantidad).toFixed(2)}
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="actualizarCantidad('${pedido.id}', ${Math.max(1, pedido.cantidad - 1)})">-</button>
+                                <button class="btn btn-outline-primary" disabled>${pedido.cantidad}</button>
+                                <button class="btn btn-outline-primary" onclick="actualizarCantidad('${pedido.id}', ${pedido.cantidad + 1})">+</button>
                             </div>
+                            <button class="btn btn-outline-danger btn-sm" onclick="eliminarPedidoPendiente('${pedido.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </div>
                 `).join('')}
             </div>
         </div>
     `).join('');
-}
 
-function eliminarPedidoPendiente(pedidoId) {
-    pedidosPendientes = pedidosPendientes.filter(p => p.id !== pedidoId);
-    actualizarPedidosPendientes();
+    contenedor.innerHTML = html;
 }
 
 function actualizarCantidad(pedidoId, nuevaCantidad) {
     const pedido = pedidosPendientes.find(p => p.id === pedidoId);
     if (pedido) {
-        // Mantener el precio unitario original y solo actualizar la cantidad
-        pedido.cantidad = Math.max(1, parseInt(nuevaCantidad) || 1);
+        pedido.cantidad = Math.max(1, nuevaCantidad);
         actualizarPedidosPendientes();
+        
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
+            icon: 'success',
+            title: `✅ Cantidad actualizada: ${pedido.cantidad}x ${pedido.nombre}`
+        });
+    }
+}
+
+function eliminarPedidoPendiente(pedidoId) {
+    // Encontrar el pedido antes de eliminarlo para mostrar sus detalles
+    const pedido = pedidosPendientes.find(p => p.id === pedidoId);
+    
+    // Eliminar el pedido
+    pedidosPendientes = pedidosPendientes.filter(p => p.id !== pedidoId);
+    actualizarPedidosPendientes();
+
+    // Mostrar mensaje de confirmación
+    if (pedido) {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
+            icon: 'success',
+            title: `❌ ${pedido.cantidad}x ${pedido.nombre} eliminado`
+        });
     }
 }
 
