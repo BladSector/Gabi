@@ -1,0 +1,56 @@
+[
+  {
+    "ticket_id": "1749253978972_1",
+    "fecha": "2025-06-06",
+    "hora": "20:52:58",
+    "mesa_id": "1",
+    "mesa_nombre": "Mesa 1",
+    "pedidos_por_cliente": {
+      "Mesa General": {
+        "pedidos": [
+          {
+            "id": "1749253974177_1",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio_unitario": 6000,
+            "precio_total": 6000,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749253974177_2",
+            "nombre": "COMBO POSITIVO DULCE",
+            "cantidad": 1,
+            "precio_unitario": 4000,
+            "precio_total": 4000,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749253974177_3",
+            "nombre": "COMBO POSITIVO DULCE",
+            "cantidad": 1,
+            "precio_unitario": 4000,
+            "precio_total": 4000,
+            "hora": "20:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          }
+        ],
+        "subtotal": 14000
+      }
+    },
+    "total": 14000,
+    "metodo_pago": "efectivo",
+    "mozo": "No especificado",
+    "detalles_pago": {
+      "timestamp": 1749253978.972677,
+      "fecha_hora_completa": "2025-06-06 20:52:58.972730"
+    }
+  }
+]
