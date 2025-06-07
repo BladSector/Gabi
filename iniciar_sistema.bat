@@ -37,24 +37,16 @@ REM Verificar actualizaciones
 echo Verificando actualizaciones...
 git fetch origin
 
-REM Crear respaldo de archivos importantes
-if exist "data\mesas.json" (
-    echo Creando respaldo de archivos locales...
-    copy "data\mesas.json" "data\mesas.json.bak" > nul
-)
-
-REM Descartar cambios locales en archivos de configuración
-git checkout -- data/mesas.json
+REM Guardar cambios locales temporalmente
+echo Guardando cambios locales...
+git stash push --include-untracked
 
 REM Actualizar desde el repositorio
 git pull origin main
 
-REM Restaurar respaldo si existe
-if exist "data\mesas.json.bak" (
-    echo Restaurando archivos locales...
-    copy "data\mesas.json.bak" "data\mesas.json" > nul
-    del "data\mesas.json.bak"
-)
+REM Restaurar cambios locales
+echo Restaurando cambios locales...
+git stash pop
 
 REM Crear entorno virtual si no existe
 if not exist "venv" (
