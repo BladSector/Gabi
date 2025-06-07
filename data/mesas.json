@@ -6,12 +6,12 @@
       "cliente_1": {
         "pedidos": [
           {
-            "id": "1749254556584_1",
+            "id": "1749255824268_1",
             "nombre": "COMBO POSITIVO SALADO",
             "cantidad": 1,
             "precio": 6000,
             "precio_total": 6000,
-            "hora": "21:02",
+            "hora": "21:23",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
@@ -30,46 +30,18 @@
       "cliente_1": {
         "pedidos": [
           {
-            "id": "1749253959287_1",
-            "nombre": "COMBO POSITIVO SALADO",
+            "id": "1749256462279_1",
+            "nombre": "COMBO POSITIVO DULCE",
             "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "20:52",
+            "precio": 4000,
+            "precio_total": 4000,
+            "hora": "21:34",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
-          },
-          {
-            "id": "1749253959287_2",
-            "nombre": "COMBO POSITIVO SALADO",
-            "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "20:52",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          },
-          {
-            "id": "1749253959287_3",
-            "nombre": "Jarrito",
-            "cantidad": 1,
-            "precio": 2300,
-            "precio_total": 2300,
-            "hora": "20:52",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General",
-            "notas": [
-              {
-                "texto": "Tipo: Con leche",
-                "hora": "20:52:37"
-              }
-            ]
           }
         ],
-        "contador_pedidos": 3
+        "contador_pedidos": 1
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -102,10 +74,33 @@
   "4": [
     {
       "nombre": "Mesa 4",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749255867769_1",
+            "nombre": "COMBO POSITIVO DULCE",
+            "cantidad": 1,
+            "precio": 4000,
+            "precio_total": 4000,
+            "hora": "21:24",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749255867769_2",
+            "nombre": "COMBO POSITIVO DULCE",
+            "cantidad": 1,
+            "precio": 4000,
+            "precio_total": 4000,
+            "hora": "21:24",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          }
+        ],
+        "contador_pedidos": 2
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -114,10 +109,22 @@
   "5": [
     {
       "nombre": "Mesa 5",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749256468591_1",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "21:34",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          }
+        ],
+        "contador_pedidos": 1
       },
       "comentarios_camarero": [],
       "notificaciones": []

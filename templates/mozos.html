@@ -761,12 +761,23 @@ function enviarPedidosCocina() {
             bootstrap.Modal.getInstance(document.getElementById('pedidosMesaModal')).hide();
             // Actualizar el mapa de mesas
             actualizarMapaMesas();
-            // Mostrar mensaje de éxito
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'Pedidos enviados correctamente',
+            
+            // Mostrar notificación toast
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
                 icon: 'success',
-                confirmButtonText: 'Aceptar'
+                title: '✅ Pedidos enviados correctamente'
             });
         } else {
             Swal.fire({
@@ -1043,15 +1054,25 @@ function procesarPago(mesaId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Cerrar modal de pago
+            // Cerrar modal de pago inmediatamente
             bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
             
-            // Mostrar mensaje de éxito
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'Cuenta pagada exitosamente',
+            // Mostrar notificación toast
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
                 icon: 'success',
-                confirmButtonText: 'Aceptar'
+                title: `✅ Cuenta pagada: $${data.total}`
             });
             
             // Actualizar mapa de mesas

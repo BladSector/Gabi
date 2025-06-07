@@ -1,0 +1,32 @@
+{
+  "ticket_id": "1749255833006_2",
+  "fecha": "2025-06-06",
+  "hora": "21:23:53",
+  "mesa_id": "2",
+  "mesa_nombre": "Mesa 2",
+  "pedidos_por_cliente": {
+    "Mesa General": {
+      "pedidos": [
+        {
+          "id": "1749253959287_1",
+          "nombre": "COMBO POSITIVO SALADO",
+          "cantidad": 1,
+          "precio_unitario": 6000,
+          "precio_total": 6000,
+          "hora": "20:52",
+          "estado_cocina": "🟡 Pendiente",
+          "mozo": "Mozo",
+          "cliente": "Mesa General"
+        }
+      ],
+      "subtotal": 6000
+    }
+  },
+  "total": 6000,
+  "metodo_pago": "efectivo",
+  "mozo": "No especificado",
+  "detalles_pago": {
+    "timestamp": 1749255833.006281,
+    "fecha_hora_completa": "2025-06-06 21:23:53.006334"
+  }
+}
