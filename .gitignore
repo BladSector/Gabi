@@ -28,5 +28,5 @@ Thumbs.db
 # Ignorar todo en la carpeta data
 data/*
 
-# Pero mantener las carpetas necesarias (vacías)
+# Pero mantener las carpetas necesarias 
 !data/menu.json
