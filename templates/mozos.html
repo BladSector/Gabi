@@ -18,7 +18,7 @@
                         <div class="input-group mb-3">
                             <span class="input-group-text">🔍</span>
                             <input type="text" class="form-control" id="buscarPlato" placeholder="Buscar platos..." onkeyup="filtrarPlatos(this.value)">
-                        </div>
+                            </div>
                         <!-- Lista del menú -->
                         <div id="listaMenu">
                             <!-- Se llenará dinámicamente -->
@@ -65,15 +65,15 @@
                             <span>Café solo</span>
                             <small class="text-muted">Café puro</small>
                         </button>
-                    </div>
+                </div>
                     <div class="col">
                         <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
                                 onclick="seleccionarTipoCafe('Cortado')">
                             <span style="font-size: 2rem;">☕</span>
                             <span>Cortado</span>
-                            <small class="text-muted">Con un poco de leche</small>
+                            <small class="text-muted">Café con un poco de leche</small>
                         </button>
-                    </div>
+            </div>
                     <div class="col">
                         <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
                                 onclick="seleccionarTipoCafe('Lágrima')">
@@ -84,9 +84,9 @@
                     </div>
                     <div class="col">
                         <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
-                                onclick="seleccionarTipoCafe('Con leche')">
+                                onclick="seleccionarTipoCafe('Café con leche')">
                             <span style="font-size: 2rem;">☕🥛</span>
-                            <span>Con leche</span>
+                            <span>Café con leche</span>
                             <small class="text-muted">Mitad café, mitad leche</small>
                         </button>
                     </div>
@@ -232,7 +232,7 @@ function obtenerEmojiCategoria(nombrePlato) {
     if (bebidasFrias.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
         return '🥤';
     }
-
+    
     // Té y bebidas calientes
     const bebidasCalientes = ['Té', 'Chocolate'];
     if (bebidasCalientes.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
@@ -244,7 +244,7 @@ function obtenerEmojiCategoria(nombrePlato) {
     if (sandwiches.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
         return '🥪';
     }
-
+    
     // Ensaladas
     const ensaladas = ['Ensalada', 'Caesar', 'Cesar'];
     if (ensaladas.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
@@ -284,11 +284,14 @@ document.addEventListener('DOMContentLoaded', function() {
     actualizarFechaHora();
     // Actualizar la hora cada 2 segundos
     setInterval(actualizarFechaHora, 2000);
+
+    // Actualizar el texto del botón de modo al inicio
+    document.getElementById('modoActual').textContent = `Modo: ${esAdmin ? 'Admin' : 'Normal'}`;
 });
 
 function cambiarModo() {
     esAdmin = !esAdmin;
-    document.getElementById('modoActual').textContent = `Modo: ${esAdmin ? 'Admin' : 'Mozo'}`;
+    document.getElementById('modoActual').textContent = `Modo: ${esAdmin ? 'Admin' : 'Normal'}`;
     actualizarMapaMesas();
 }
 
@@ -322,16 +325,16 @@ function actualizarMapaMesas() {
 
                     // Función para formatear el nombre del pedido
                     const formatearNombrePedido = (pedido) => {
-                        const esCafe = pedido.nombre.toLowerCase().includes('café') || 
-                                     ['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
-                                         pedido.nombre.toLowerCase().includes(tipo.toLowerCase())
+                        const esCafe = pedido.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes('cafe') || 
+                                     ['pocillo', 'jarrito', 'taza', 'tazon'].some(tipo => 
+                                         pedido.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(tipo)
                                      );
                         
                         if (esCafe && pedido.notas && pedido.notas.length > 0) {
                             const tipoCafe = pedido.notas[0].texto;
                             const tipoLimpio = tipoCafe
                                 .replace(/^Tipo:?\s*/i, '')
-                                .replace(/[^\w\s]/g, '')
+                                .replace(/[^\w\sáéíóúÁÉÍÓÚñÑ]/g, '')
                                 .trim();
                             return `${obtenerEmojiCategoria(pedido.nombre)} ${pedido.nombre}: ${tipoLimpio}`;
                         }
@@ -371,9 +374,17 @@ function actualizarMapaMesas() {
                                                             <h6 class="mb-0">
                                                                 ${formatearNombrePedido(pedido)}
                                                             </h6>
-                                                            <span class="badge bg-secondary">
-                                                                ${pedido.cantidad}x
-                                                            </span>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="badge bg-secondary">
+                                                                    ${pedido.cantidad}x
+                                                                </span>
+                                                                ${esAdmin ? `
+                                                                    <button class="btn btn-outline-danger btn-sm py-0 px-2" 
+                                                                            onclick="event.stopPropagation(); cancelarPedido(event, '${mesa.id}', '${pedido.id}')">
+                                                                        ❌
+                                                                    </button>
+                                                                ` : ''}
+                                                        </div>
                                                         </div>
                                                         ${pedido.notas && pedido.notas.length > 0 && !pedido.nombre.toLowerCase().includes('café') && 
                                                           !['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
@@ -425,9 +436,17 @@ function actualizarMapaMesas() {
                                                             <h6 class="mb-0">
                                                                 ${formatearNombrePedido(pedido)}
                                                             </h6>
-                                                            <span class="badge bg-secondary">
-                                                                ${pedido.cantidad}x
-                                                            </span>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="badge bg-secondary">
+                                                                    ${pedido.cantidad}x
+                                                                </span>
+                                                                ${esAdmin ? `
+                                                                    <button class="btn btn-outline-danger btn-sm py-0 px-2" 
+                                                                            onclick="event.stopPropagation(); cancelarPedido(event, '${mesa.id}', '${pedido.id}')">
+                                                                        ❌
+                                                                    </button>
+                                                                ` : ''}
+                                                        </div>
                                                         </div>
                                                         ${pedido.notas && pedido.notas.length > 0 && !pedido.nombre.toLowerCase().includes('café') && 
                                                           !['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
@@ -614,10 +633,10 @@ function continuarAbrirGestionPedidos() {
                                             <small class="text-primary">$${item.precio}</small>
                                         </p>
                                         <button class="btn btn-sm btn-outline-primary w-100" onclick="agregarPedido(${item.id})">
-                                            Agregar
-                                        </button>
+                                                Agregar
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
                             </div>
                         `;
                     }
@@ -679,10 +698,10 @@ function agregarPedido(platoId) {
 function seleccionarTipoCafe(tipo) {
     if (platoSeleccionado) {
         const emojis = {
-            'Café solo': '☕',
-            'Cortado': '☕',
-            'Lágrima': '🥛',
-            'Con leche': '☕🥛'
+            'Café solo (café puro)': '☕',
+            'Café cortado (café con un poco de leche)': '☕',
+            'Lágrima (leche con un poco de café)': '🥛',
+            'Café con leche (mitad café, mitad leche)': '☕🥛'
         };
         
         const emoji = emojis[tipo] || '☕';
@@ -711,7 +730,14 @@ function agregarPedidoConNota(plato, nota = null) {
     }
 
     // Verificar si el plato ya está en pedidos pendientes
-    const pedidoExistente = pedidosPendientes.find(p => p.plato_id === plato.id);
+    const pedidoExistente = pedidosPendientes.find(p => {
+        // Si es un café, comparar también el tipo
+        if (nota && p.plato_id === plato.id && p.notas && p.notas.length > 0) {
+            return p.notas[0].texto === `Tipo: ${nota}`;
+        }
+        // Si no es un café o no tiene nota, comparar solo el ID
+        return !nota && p.plato_id === plato.id;
+    });
     
     if (pedidoExistente) {
         // Mostrar modal para aumentar cantidad
@@ -719,7 +745,7 @@ function agregarPedidoConNota(plato, nota = null) {
             title: 'Plato ya agregado',
             html: `
                 <div class="text-center">
-                    <p class="mb-3">${plato.nombre} ya está en tu pedido.</p>
+                    <p class="mb-3">${plato.nombre} ${nota ? `(${nota})` : ''} ya está en tu pedido.</p>
                     <p class="mb-3">Cantidad actual: ${pedidoExistente.cantidad}</p>
                     <div class="d-flex justify-content-center align-items-center gap-2">
                         <button class="btn btn-outline-primary" onclick="cambiarCantidad(-1)">-</button>
@@ -763,7 +789,7 @@ function agregarPedidoConNota(plato, nota = null) {
 
                     Toast.fire({
                         icon: 'success',
-                        title: `✅ Cantidad actualizada: ${nuevaCantidad}x ${plato.nombre}`
+                        title: `✅ Cantidad actualizada: ${nuevaCantidad}x ${plato.nombre} ${nota ? `(${nota})` : ''}`
                     });
                 }
             }
@@ -814,7 +840,7 @@ function actualizarPedidosPendientes() {
         contenedor.innerHTML = '<p class="text-muted text-center">No hay pedidos pendientes</p>';
         return;
     }
-
+    
     // Agrupar pedidos por cliente si es Take Away
     const pedidosPorCliente = {};
     pedidosPendientes.forEach(pedido => {
@@ -824,25 +850,25 @@ function actualizarPedidosPendientes() {
         }
         pedidosPorCliente[cliente].push(pedido);
     });
-
+    
     const html = Object.entries(pedidosPorCliente).map(([cliente, pedidos]) => `
         <div class="card mb-2">
             ${esTakeAway ? `
                 <div class="card-header py-2">
-                    <h6 class="mb-0">Cliente: ${cliente}</h6>
-                </div>
+                <h6 class="mb-0">Cliente: ${cliente}</h6>
+            </div>
             ` : ''}
             <div class="card-body p-2">
                 ${pedidos.map(pedido => `
                     <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
-                        <div>
-                            <h6 class="mb-1">${pedido.nombre}</h6>
-                            ${pedido.notas && pedido.notas.length > 0 ? 
+                                <div>
+                                    <h6 class="mb-1">${pedido.nombre}</h6>
+                                    ${pedido.notas && pedido.notas.length > 0 ? 
                                 `<small class="text-primary d-block">${pedido.notas[0].texto}</small>` : ''}
-                            <small class="text-muted d-block">
+                                    <small class="text-muted d-block">
                                 $${pedido.precio} c/u | Total: $${(pedido.precio * pedido.cantidad).toFixed(2)}
-                            </small>
-                        </div>
+                                    </small>
+                                </div>
                         <div class="d-flex align-items-center gap-2">
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="actualizarCantidad('${pedido.id}', ${Math.max(1, pedido.cantidad - 1)})">-</button>
@@ -850,8 +876,8 @@ function actualizarPedidosPendientes() {
                                 <button class="btn btn-outline-primary" onclick="actualizarCantidad('${pedido.id}', ${pedido.cantidad + 1})">+</button>
                             </div>
                             <button class="btn btn-outline-danger btn-sm" onclick="eliminarPedidoPendiente('${pedido.id}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                         </div>
                     </div>
                 `).join('')}
@@ -930,7 +956,7 @@ function cancelarPedido(event, mesaId, pedidoId) {
             fetch(`/api/mozos/pedidos/${pedidoId}/cancelar`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ mesa_id: mesaId })
             })
@@ -1099,13 +1125,13 @@ function reiniciarMesa(event, mesaId) {
         cancelButtonText: 'No'
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch(`/api/mozos/mesas/${mesaId}/reiniciar`, {
-                method: 'PUT'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    actualizarMapaMesas();
+        fetch(`/api/mozos/mesas/${mesaId}/reiniciar`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMapaMesas();
                     const Toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -1118,7 +1144,7 @@ function reiniciarMesa(event, mesaId) {
                         icon: 'success',
                         title: 'Mesa reiniciada correctamente'
                     });
-                } else {
+            } else {
                     const Toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -1131,9 +1157,9 @@ function reiniciarMesa(event, mesaId) {
                         icon: 'error',
                         title: 'Error al reiniciar la mesa: ' + data.error
                     });
-                }
-            })
-            .catch(error => {
+            }
+        })
+        .catch(error => {
                 const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',

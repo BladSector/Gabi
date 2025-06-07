@@ -82,9 +82,94 @@
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
+          },
+          {
+            "id": "1749271908230_7",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "01:51",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕🥛 Café con leche (mitad café, mitad leche)",
+                "hora": "1:51:46"
+              }
+            ]
+          },
+          {
+            "id": "1749273662999_8",
+            "nombre": "Jarrito",
+            "cantidad": 2,
+            "precio": 2300,
+            "precio_total": 4600,
+            "hora": "02:21",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café solo",
+                "hora": "2:20:42"
+              }
+            ]
+          },
+          {
+            "id": "1749273662999_9",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:21",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Cortado",
+                "hora": "2:20:50"
+              }
+            ]
+          },
+          {
+            "id": "1749273662999_10",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:21",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café con leche",
+                "hora": "2:20:53"
+              }
+            ]
+          },
+          {
+            "id": "1749273662999_11",
+            "nombre": "Jarrito",
+            "cantidad": 2,
+            "precio": 2300,
+            "precio_total": 4600,
+            "hora": "02:21",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Lágrima",
+                "hora": "2:20:55"
+              }
+            ]
           }
         ],
-        "contador_pedidos": 6
+        "contador_pedidos": 11
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -104,34 +189,6 @@
             "precio_total": 6000,
             "hora": "22:44",
             "estado_cocina": "💰 Pagado",
-            "mozo": "Mozo",
-            "cliente": "Mesa General"
-          },
-          {
-            "id": "1749260670367_2",
-            "nombre": "Pocillo",
-            "cantidad": 1,
-            "precio": 2300,
-            "precio_total": 6900,
-            "hora": "22:44",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "Mesa General",
-            "notas": [
-              {
-                "texto": "Tipo: Cortado",
-                "hora": "22:44:18"
-              }
-            ]
-          },
-          {
-            "id": "1749264415006_3",
-            "nombre": "Exprimido",
-            "cantidad": 1,
-            "precio": 2800,
-            "precio_total": 2800,
-            "hora": "23:46",
-            "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
           },
@@ -204,12 +261,74 @@
             "precio": 3000,
             "precio_total": 3000,
             "hora": "00:47",
+            "estado_cocina": "💰 Pagado",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749273094127_9",
+            "nombre": "Taza",
+            "cantidad": 1,
+            "precio": 2500,
+            "precio_total": 2500,
+            "hora": "02:11",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café con leche",
+                "hora": "2:11:32"
+              }
+            ]
+          },
+          {
+            "id": "1749273104783_10",
+            "nombre": "COMBO POSITIVO SALADO",
+            "cantidad": 1,
+            "precio": 6000,
+            "precio_total": 6000,
+            "hora": "02:11",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
             "cliente": "Mesa General"
+          },
+          {
+            "id": "1749273104783_11",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:11",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Lágrima",
+                "hora": "2:11:43"
+              }
+            ]
+          },
+          {
+            "id": "1749273203193_12",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:13",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Cortado",
+                "hora": "2:13:22"
+              }
+            ]
           }
         ],
-        "contador_pedidos": 8
+        "contador_pedidos": 12
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -222,40 +341,109 @@
       "cliente_1": {
         "pedidos": [
           {
-            "id": "1749259282766_1",
-            "nombre": "COMBO POSITIVO DULCE",
+            "id": "1749272422369_1",
+            "nombre": "Jarrito",
             "cantidad": 1,
-            "precio": 4000,
-            "precio_total": 4000,
-            "hora": "22:21",
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:00",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
-            "cliente": "Mesa General"
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café con leche",
+                "hora": "1:59:51"
+              }
+            ]
           },
           {
-            "id": "1749260553257_2",
-            "nombre": "COMBO POSITIVO SALADO",
+            "id": "1749272422369_2",
+            "nombre": "Tazón",
             "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "22:42",
+            "precio": 3000,
+            "precio_total": 3000,
+            "hora": "02:00",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
-            "cliente": "Mesa General"
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café solo",
+                "hora": "1:59:54"
+              }
+            ]
           },
           {
-            "id": "1749267969238_3",
-            "nombre": "COMBO POSITIVO SALADO",
+            "id": "1749272422369_3",
+            "nombre": "Taza",
             "cantidad": 1,
-            "precio": 6000,
-            "precio_total": 6000,
-            "hora": "00:46",
+            "precio": 2500,
+            "precio_total": 2500,
+            "hora": "02:00",
             "estado_cocina": "🟡 Pendiente",
             "mozo": "Mozo",
-            "cliente": "Mesa General"
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Cortado",
+                "hora": "2:00:19"
+              }
+            ]
+          },
+          {
+            "id": "1749273244657_4",
+            "nombre": "Pocillo",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:14",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café solo",
+                "hora": "2:14:03"
+              }
+            ]
+          },
+          {
+            "id": "1749273256213_5",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "02:14",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café con leche",
+                "hora": "2:14:14"
+              }
+            ]
+          },
+          {
+            "id": "1749273273514_6",
+            "nombre": "Tazón",
+            "cantidad": 1,
+            "precio": 3000,
+            "precio_total": 3000,
+            "hora": "02:14",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Lágrima",
+                "hora": "2:14:32"
+              }
+            ]
           }
         ],
-        "contador_pedidos": 3
+        "contador_pedidos": 6
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -288,9 +476,26 @@
             "estado_cocina": "💰 Pagado",
             "mozo": "Mozo",
             "cliente": "Mesa General"
+          },
+          {
+            "id": "1749271991270_3",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "01:53",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕ Café cortado (café con un poco de leche)",
+                "hora": "1:53:09"
+              }
+            ]
           }
         ],
-        "contador_pedidos": 2
+        "contador_pedidos": 3
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -323,10 +528,28 @@
   "6": [
     {
       "nombre": "Mesa 6",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749271924020_1",
+            "nombre": "Pocillo",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "01:52",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General",
+            "notas": [
+              {
+                "texto": "Tipo: ☕🥛 Café con leche (mitad café, mitad leche)",
+                "hora": "1:52:01"
+              }
+            ]
+          }
+        ],
+        "contador_pedidos": 1
       },
       "comentarios_camarero": [],
       "notificaciones": []
@@ -359,10 +582,28 @@
   "9": [
     {
       "nombre": "Take Away Barra",
-      "estado": "libre",
+      "estado": "ocupada",
       "cliente_1": {
-        "pedidos": [],
-        "contador_pedidos": 0
+        "pedidos": [
+          {
+            "id": "1749271662900_2",
+            "nombre": "Jarrito",
+            "cantidad": 1,
+            "precio": 2300,
+            "precio_total": 2300,
+            "hora": "01:47",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "1",
+            "notas": [
+              {
+                "texto": "Tipo: ☕🥛 Café con leche (mitad café, mitad leche)",
+                "hora": "1:47:41"
+              }
+            ]
+          }
+        ],
+        "contador_pedidos": 2
       },
       "comentarios_camarero": [],
       "notificaciones": []
