@@ -36,13 +36,24 @@ if not exist ".git" (
 REM Verificar actualizaciones
 echo Verificando actualizaciones...
 git fetch origin
-git status | findstr "behind" > nul
-if not errorlevel 1 (
-    echo Se encontraron actualizaciones. Descargando...
-    git pull origin main
-    echo Actualizaciones instaladas correctamente.
-) else (
-    echo El sistema está actualizado.
+
+REM Crear respaldo de archivos importantes
+if exist "data\mesas.json" (
+    echo Creando respaldo de archivos locales...
+    copy "data\mesas.json" "data\mesas.json.bak" > nul
+)
+
+REM Descartar cambios locales en archivos de configuración
+git checkout -- data/mesas.json
+
+REM Actualizar desde el repositorio
+git pull origin main
+
+REM Restaurar respaldo si existe
+if exist "data\mesas.json.bak" (
+    echo Restaurando archivos locales...
+    copy "data\mesas.json.bak" "data\mesas.json" > nul
+    del "data\mesas.json.bak"
 )
 
 REM Crear entorno virtual si no existe
