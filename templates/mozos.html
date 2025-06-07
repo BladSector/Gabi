@@ -425,11 +425,17 @@ function abrirGestionPedidos(mesaId, mesaNombre) {
 function confirmarNombreCliente() {
     const nombreCliente = document.getElementById('nombreCliente').value.trim();
     if (!nombreCliente) {
-        Swal.fire({
-            title: 'Error',
-            text: 'El nombre del cliente es obligatorio para Take Away',
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
             icon: 'error',
-            confirmButtonText: 'Aceptar'
+            title: 'El nombre del cliente es obligatorio para Take Away'
         });
         return;
     }
@@ -546,11 +552,17 @@ function seleccionarTipoCafe(tipo) {
 function agregarPedidoConNota(plato, nota = null) {
     // Validar que haya nombre de cliente para Take Away
     if (esTakeAway && !clienteActual) {
-        Swal.fire({
-            title: 'Error',
-            text: 'Es necesario ingresar el nombre del cliente para Take Away',
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
             icon: 'error',
-            confirmButtonText: 'Aceptar'
+            title: 'Es necesario ingresar el nombre del cliente para Take Away'
         });
         return;
     }
@@ -581,11 +593,7 @@ function agregarPedidoConNota(plato, nota = null) {
         position: 'top-end',
         showConfirmButton: false,
         timer: 2000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
+        timerProgressBar: true
     });
 
     Toast.fire({
@@ -663,12 +671,20 @@ function actualizarCantidad(pedidoId, nuevaCantidad) {
 
 function cancelarPedido(event, mesaId, pedidoId) {
     event.stopPropagation();
-    Swal.fire({
-        title: 'Confirmar',
-        text: '¿Está seguro que desea cancelar este pedido?',
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: true,
+        showCancelButton: true,
+        timer: 5000,
+        timerProgressBar: true
+    });
+
+    Toast.fire({
+        title: '¿Cancelar pedido?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, cancelar',
+        confirmButtonText: 'Sí',
         cancelButtonText: 'No'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -683,27 +699,45 @@ function cancelarPedido(event, mesaId, pedidoId) {
             .then(data => {
                 if (data.success) {
                     actualizarMapaMesas();
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Pedido cancelado correctamente',
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    Toast.fire({
                         icon: 'success',
-                        confirmButtonText: 'Aceptar'
+                        title: 'Pedido cancelado correctamente'
                     });
                 } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error al cancelar el pedido: ' + data.error,
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    Toast.fire({
                         icon: 'error',
-                        confirmButtonText: 'Aceptar'
+                        title: 'Error al cancelar el pedido: ' + data.error
                     });
                 }
             })
             .catch(error => {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al cancelar el pedido',
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
                     icon: 'error',
-                    confirmButtonText: 'Aceptar'
+                    title: 'Error al cancelar el pedido'
                 });
             });
         }
@@ -712,11 +746,17 @@ function cancelarPedido(event, mesaId, pedidoId) {
 
 function enviarPedidosCocina() {
     if (pedidosPendientes.length === 0) {
-        Swal.fire({
-            title: 'Atención',
-            text: 'No hay pedidos para enviar',
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
             icon: 'warning',
-            confirmButtonText: 'Aceptar'
+            title: 'No hay pedidos para enviar'
         });
         return;
     }
@@ -725,11 +765,17 @@ function enviarPedidosCocina() {
     if (esTakeAway) {
         const pedidosSinCliente = pedidosPendientes.some(p => !p.cliente || p.cliente === 'Mesa General');
         if (pedidosSinCliente) {
-            Swal.fire({
-                title: 'Error',
-                text: 'Todos los pedidos de Take Away deben tener un nombre de cliente',
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
                 icon: 'error',
-                confirmButtonText: 'Aceptar'
+                title: 'Todos los pedidos de Take Away deben tener un nombre de cliente'
             });
             return;
         }
@@ -768,11 +814,7 @@ function enviarPedidosCocina() {
                 position: 'top-end',
                 showConfirmButton: false,
                 timer: 2000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
+                timerProgressBar: true
             });
 
             Toast.fire({
@@ -801,43 +843,69 @@ function enviarPedidosCocina() {
 
 function reiniciarMesa(event, mesaId) {
     event.stopPropagation();
-    Swal.fire({
-        title: 'Confirmar',
-        text: '¿Está seguro que desea reiniciar esta mesa?',
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: true,
+        showCancelButton: true,
+        timer: 5000,
+        timerProgressBar: true
+    });
+
+    Toast.fire({
+        title: '¿Reiniciar mesa?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, reiniciar',
+        confirmButtonText: 'Sí',
         cancelButtonText: 'No'
     }).then((result) => {
         if (result.isConfirmed) {
-        fetch(`/api/mozos/mesas/${mesaId}/reiniciar`, {
-            method: 'PUT'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarMapaMesas();
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Mesa reiniciada correctamente',
+            fetch(`/api/mozos/mesas/${mesaId}/reiniciar`, {
+                method: 'PUT'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    actualizarMapaMesas();
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    Toast.fire({
                         icon: 'success',
-                        confirmButtonText: 'Aceptar'
+                        title: 'Mesa reiniciada correctamente'
                     });
-            } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Error al reiniciar la mesa: ' + data.error,
+                } else {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+
+                    Toast.fire({
                         icon: 'error',
-                        confirmButtonText: 'Aceptar'
+                        title: 'Error al reiniciar la mesa: ' + data.error
                     });
-            }
-        })
-        .catch(error => {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al reiniciar la mesa',
+                }
+            })
+            .catch(error => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
                     icon: 'error',
-                    confirmButtonText: 'Aceptar'
+                    title: 'Error al reiniciar la mesa'
                 });
             });
         }
@@ -1025,11 +1093,17 @@ function procesarPago(mesaId) {
     }));
 
     if (pedidosParaPagar.length === 0) {
-        Swal.fire({
-            title: 'Atención',
-            text: 'Debe seleccionar al menos un ítem para pagar',
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
             icon: 'warning',
-            confirmButtonText: 'Aceptar'
+            title: 'Debe seleccionar al menos un ítem para pagar'
         });
         return;
     }
@@ -1057,42 +1131,44 @@ function procesarPago(mesaId) {
             // Cerrar modal de pago inmediatamente
             bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
             
-            // Mostrar notificación toast
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
-
-            Toast.fire({
+            // Mostrar mensaje de éxito permanente
+            Swal.fire({
+                title: '¡Pago exitoso!',
+                text: `Total pagado: $${data.total}`,
                 icon: 'success',
-                title: `✅ Cuenta pagada: $${data.total}`
+                confirmButtonText: 'Aceptar'
             });
             
             // Actualizar mapa de mesas
             actualizarMapaMesas();
         } else {
-            Swal.fire({
-                title: 'Error',
-                text: 'Error al pagar la cuenta: ' + data.error,
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
                 icon: 'error',
-                confirmButtonText: 'Aceptar'
+                title: 'Error al procesar el pago: ' + data.error
             });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        Swal.fire({
-            title: 'Error',
-            text: 'Error al procesar el pago',
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        Toast.fire({
             icon: 'error',
-            confirmButtonText: 'Aceptar'
+            title: 'Error al procesar el pago'
         });
     });
 }
@@ -1247,13 +1323,22 @@ document.addEventListener('DOMContentLoaded', function() {
     pedidosMesaModal.addEventListener('hide.bs.modal', function (event) {
         if (pedidosPendientes.length > 0) {
             event.preventDefault();
-            Swal.fire({
-                title: '¿Está seguro?',
-                text: 'Hay pedidos sin enviar. Si cierra se perderán los cambios.',
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: true,
+                showCancelButton: true,
+                timer: 5000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
+                title: '¿Cerrar sin guardar?',
+                text: 'Hay pedidos sin enviar',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Sí, cerrar',
-                cancelButtonText: 'No, continuar'
+                confirmButtonText: 'Sí',
+                cancelButtonText: 'No'
             }).then((result) => {
                 if (result.isConfirmed) {
                     resetearEstadoPedidos();
