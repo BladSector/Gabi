@@ -53,15 +53,43 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Seleccionar tipo de café</h5>
+                <h5 class="modal-title">¿Cómo lo vas a querer? ☕</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="list-group">
-                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Café')">Café</button>
-                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Cortado')">Cortado</button>
-                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Lágrima')">Lágrima</button>
-                    <button class="list-group-item list-group-item-action" onclick="seleccionarTipoCafe('Con leche')">Con leche</button>
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    <div class="col">
+                        <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
+                                onclick="seleccionarTipoCafe('Café solo')">
+                            <span style="font-size: 2rem;">☕</span>
+                            <span>Café solo</span>
+                            <small class="text-muted">Café puro</small>
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
+                                onclick="seleccionarTipoCafe('Cortado')">
+                            <span style="font-size: 2rem;">☕</span>
+                            <span>Cortado</span>
+                            <small class="text-muted">Con un poco de leche</small>
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
+                                onclick="seleccionarTipoCafe('Lágrima')">
+                            <span style="font-size: 2rem;">🥛</span>
+                            <span>Lágrima</span>
+                            <small class="text-muted">Leche con un poco de café</small>
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-outline-primary w-100 h-100 p-3 d-flex flex-column align-items-center gap-2" 
+                                onclick="seleccionarTipoCafe('Con leche')">
+                            <span style="font-size: 2rem;">☕🥛</span>
+                            <span>Con leche</span>
+                            <small class="text-muted">Mitad café, mitad leche</small>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -194,33 +222,51 @@ let esTakeAway = false;
 
 function obtenerEmojiCategoria(nombrePlato) {
     // Productos de cafetería
-    const productosCafeteria = ['Pocillo', 'Jarrito', 'Taza', 'Tazón', 'Café para llevar chico', 'Café para llevar grande', 'Café', 'Cortado', 'Lágrima', 'Con leche'];
-    if (productosCafeteria.some(producto => nombrePlato.includes(producto))) {
+    const productosCafeteria = ['Pocillo', 'Jarrito', 'Taza', 'Tazón', 'Café', 'Cortado', 'Lágrima', 'Capuccino', 'Latte'];
+    if (productosCafeteria.some(producto => nombrePlato.toLowerCase().includes(producto.toLowerCase()))) {
         return '☕';
     }
     
-    // Bebidas
-    const bebidas = ['Agua', 'Gaseosa', 'Limonada', 'Jugo', 'Té'];
-    if (bebidas.some(bebida => nombrePlato.includes(bebida))) {
+    // Bebidas frías
+    const bebidasFrias = ['Agua', 'Gaseosa', 'Limonada', 'Jugo', 'Licuado'];
+    if (bebidasFrias.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
         return '🥤';
     }
-    
-    // Salados
-    const salados = ['Sandwich', 'Tostado', 'Empanada', 'Pizza', 'Hamburguesa'];
-    if (salados.some(salado => nombrePlato.includes(salado))) {
-        return '🥪';
+
+    // Té y bebidas calientes
+    const bebidasCalientes = ['Té', 'Chocolate'];
+    if (bebidasCalientes.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
+        return '🫖';
     }
     
-    // Dulces
-    const dulces = ['Torta', 'Alfajor', 'Galletas', 'Brownie', 'Muffin', 'Medialuna'];
-    if (dulces.some(dulce => nombrePlato.includes(dulce))) {
+    // Sándwiches y tostados
+    const sandwiches = ['Sandwich', 'Sándwich', 'Tostado'];
+    if (sandwiches.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
+        return '🥪';
+    }
+
+    // Ensaladas
+    const ensaladas = ['Ensalada', 'Caesar', 'Cesar'];
+    if (ensaladas.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
+        return '🥗';
+    }
+    
+    // Dulces y postres
+    const dulces = ['Torta', 'Alfajor', 'Galletas', 'Brownie', 'Muffin', 'Medialuna', 'Cookie'];
+    if (dulces.some(dulce => nombrePlato.toLowerCase().includes(dulce.toLowerCase()))) {
         return '🍰';
     }
     
     // Combos
     const combos = ['Combo', 'Promo', 'Menú'];
-    if (combos.some(combo => nombrePlato.includes(combo))) {
+    if (combos.some(combo => nombrePlato.toLowerCase().includes(combo.toLowerCase()))) {
         return '🍽️';
+    }
+
+    // Toast y tostadas
+    const tostadas = ['Toast', 'Tostada'];
+    if (tostadas.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
+        return '🍞';
     }
     
     // Por defecto
@@ -266,8 +312,32 @@ function actualizarMapaMesas() {
                         !p.estado_cocina.includes('💰')
                     );
 
+                    // Calcular el total de items pendientes (sumando las cantidades)
+                    const totalItemsPendientes = pedidosPendientes.reduce((total, pedido) => 
+                        total + (pedido.cantidad || 1), 0
+                    );
+
                     // Verificar si hay pedidos pendientes
-                    const tienePedidosPendientes = pedidosPendientes.length > 0;
+                    const tienePedidosPendientes = totalItemsPendientes > 0;
+
+                    // Función para formatear el nombre del pedido
+                    const formatearNombrePedido = (pedido) => {
+                        const esCafe = pedido.nombre.toLowerCase().includes('café') || 
+                                     ['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
+                                         pedido.nombre.toLowerCase().includes(tipo.toLowerCase())
+                                     );
+                        
+                        if (esCafe && pedido.notas && pedido.notas.length > 0) {
+                            const tipoCafe = pedido.notas[0].texto;
+                            const tipoLimpio = tipoCafe
+                                .replace(/^Tipo:?\s*/i, '')
+                                .replace(/[^\w\s]/g, '')
+                                .trim();
+                            return `${obtenerEmojiCategoria(pedido.nombre)} ${pedido.nombre}: ${tipoLimpio}`;
+                        }
+                        
+                        return `${obtenerEmojiCategoria(pedido.nombre)} ${pedido.nombre}`;
+                    };
 
                     // Agrupar pedidos por cliente para Take Away Barra
                     let contenidoPedidos = '';
@@ -276,51 +346,58 @@ function actualizarMapaMesas() {
                         pedidosPendientes.forEach(pedido => {
                             const cliente = pedido.cliente || 'Cliente sin nombre';
                             if (!pedidosPorCliente[cliente]) {
-                                pedidosPorCliente[cliente] = [];
+                                pedidosPorCliente[cliente] = {
+                                    pedidos: [],
+                                    totalItems: 0
+                                };
                             }
-                            pedidosPorCliente[cliente].push(pedido);
+                            pedidosPorCliente[cliente].pedidos.push(pedido);
+                            pedidosPorCliente[cliente].totalItems += (pedido.cantidad || 1);
                         });
 
                         contenidoPedidos = `
                             <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
-                                ${Object.entries(pedidosPorCliente).map(([cliente, pedidosCliente], index) => `
+                                ${Object.entries(pedidosPorCliente).map(([cliente, datos], index) => `
                                     <div class="card mb-3 border-primary">
-                                        <div class="card-header bg-primary text-white">
-                                            <h6 class="mb-0">Cliente: ${cliente}</h6>
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">👤 ${cliente}</h6>
+                                            <span class="badge bg-light text-primary">${datos.totalItems} items</span>
                                         </div>
                                         <div class="card-body p-2">
-                                            ${pedidosCliente.map(pedido => `
+                                            ${datos.pedidos.map(pedido => `
                                                 <div class="card mb-2">
                                                     <div class="card-body p-2">
-                                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                                            <h6 class="card-title mb-0">${obtenerEmojiCategoria(pedido.nombre)}</h6>
-                                                            <small class="text-muted">${pedido.hora_envio}</small>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0">
+                                                                ${formatearNombrePedido(pedido)}
+                                                            </h6>
+                                                            <span class="badge bg-secondary">
+                                                                ${pedido.cantidad}x
+                                                            </span>
                                                         </div>
-                                                        <p class="card-text mb-1">
-                                                            ${pedido.cantidad}x ${pedido.nombre}
-                                                        </p>
-                                                        <p class="card-text mb-1">
-                                                            <small>
-                                                                Estado: ${pedido.estado_cocina}
-                                                            </small>
-                                                        </p>
-                                                        ${pedido.notas && pedido.notas.length > 0 ? `
-                                                            <div class="alert alert-info py-1 mb-1">
-                                                                <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
+                                                        ${pedido.notas && pedido.notas.length > 0 && !pedido.nombre.toLowerCase().includes('café') && 
+                                                          !['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
+                                                              pedido.nombre.toLowerCase().includes(tipo.toLowerCase())
+                                                          ) ? `
+                                                            <div class="alert alert-info py-1 px-2 mb-0 mt-2">
+                                                                <small>📝 ${pedido.notas.map(n => n.texto).join(', ')}</small>
                                                             </div>
                                                         ` : ''}
-                                                        ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedido(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
                                                     </div>
                                                 </div>
                                             `).join('')}
                                             <button class="btn btn-success w-100 mt-2" onclick='pagarCuentaCliente("${mesa.id}", "${cliente}")'>
-                                                Pagar Cuenta de ${cliente}
+                                                💳 Pagar Cuenta de ${cliente}
                                             </button>
                                         </div>
                                     </div>
                                 `).join('')}
                             </div>
-                            ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                            ${esAdmin ? `
+                                <button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>
+                                    🔄 Reiniciar Mesa
+                                </button>
+                            ` : ''}
                         `;
                     } else if (tienePedidosPendientes) {
                         // Visualización para otras mesas con pedidos pendientes
@@ -328,11 +405,14 @@ function actualizarMapaMesas() {
                             <div class="accordion mt-3" id="accordionMesa${mesa.id}" onclick="event.stopPropagation()">
                                 <div class="accordion-item">
                                     <h2 class="accordion-header">
-                                        <button class="accordion-button ${acordeonesAbiertos[`collapsePendientes${mesa.id}`] ? '' : 'collapsed'}" 
+                                        <button class="accordion-button p-2 ${acordeonesAbiertos[`collapsePendientes${mesa.id}`] ? '' : 'collapsed'}" 
                                                 type="button" 
                                                 data-bs-toggle="collapse" 
                                                 data-bs-target="#collapsePendientes${mesa.id}">
-                                            Pedidos Pendientes (${pedidosPendientes.length})
+                                            <div class="d-flex justify-content-between align-items-center w-100">
+                                                <span>📋 Pedidos</span>
+                                                <span class="badge bg-warning text-dark ms-2">${totalItemsPendientes} items</span>
+                                            </div>
                                         </button>
                                     </h2>
                                     <div id="collapsePendientes${mesa.id}" 
@@ -341,22 +421,22 @@ function actualizarMapaMesas() {
                                             ${pedidosPendientes.map(pedido => `
                                                 <div class="card mb-2">
                                                     <div class="card-body p-2">
-                                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                                            <h6 class="card-title mb-0">${obtenerEmojiCategoria(pedido.nombre)}</h6>
-                                                            <small class="text-muted">${pedido.hora_envio}</small>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0">
+                                                                ${formatearNombrePedido(pedido)}
+                                                            </h6>
+                                                            <span class="badge bg-secondary">
+                                                                ${pedido.cantidad}x
+                                                            </span>
                                                         </div>
-                                                        <p class="card-text mb-1">
-                                                            ${pedido.cantidad}x ${pedido.nombre}
-                                                        </p>
-                                                        <p class="card-text mb-1">
-                                                            <small>Estado: ${pedido.estado_cocina}</small>
-                                                        </p>
-                                                        ${pedido.notas && pedido.notas.length > 0 ? `
-                                                            <div class="alert alert-info py-1 mb-1">
-                                                                <small>📝<br>${pedido.notas.map(n => `• ${n.texto}`).join('<br>')}</small>
+                                                        ${pedido.notas && pedido.notas.length > 0 && !pedido.nombre.toLowerCase().includes('café') && 
+                                                          !['pocillo', 'jarrito', 'taza', 'tazón'].some(tipo => 
+                                                              pedido.nombre.toLowerCase().includes(tipo.toLowerCase())
+                                                          ) ? `
+                                                            <div class="alert alert-info py-1 px-2 mb-0 mt-2">
+                                                                <small>📝 ${pedido.notas.map(n => n.texto).join(', ')}</small>
                                                             </div>
                                                         ` : ''}
-                                                        ${esAdmin ? `<button class='btn btn-danger btn-sm w-100 mt-1' onclick='cancelarPedido(event, "${mesa.id}", "${pedido.id}")'>Cancelar Pedido</button>` : ''}
                                                     </div>
                                                 </div>
                                             `).join('')}
@@ -365,22 +445,27 @@ function actualizarMapaMesas() {
                                 </div>
                             </div>
                             <div class="mt-2">
-                                <button class='btn btn-success btn-sm w-100' onclick='pagarCuenta("${mesa.id}")'>Pagar Cuenta</button>
-                                ${esAdmin ? `<button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>Reiniciar Mesa</button>` : ''}
+                                <button class='btn btn-success btn-sm w-100' onclick='pagarCuenta("${mesa.id}")'>
+                                    💳 Pagar Cuenta
+                                </button>
+                                ${esAdmin ? `
+                                    <button class='btn btn-warning btn-sm w-100 mt-2' onclick='reiniciarMesa(event, "${mesa.id}")'>
+                                        🔄 Reiniciar Mesa
+                                    </button>
+                                ` : ''}
                             </div>
                         `;
                     }
 
                     return `
                         <div class="col">
-                            <div class="card h-100 ${tienePedidosPendientes ? 'border-warning' : 'border-success'}">
+                            <div class="card h-100 ${tienePedidosPendientes ? 'border-warning' : 'border-success'} shadow-sm">
                                 <div class="card-body" onclick="abrirGestionPedidos('${mesa.id}', '${mesa.nombre}')" style="cursor: pointer;">
-                                    <h5 class="card-title">${mesa.nombre}</h5>
-                                    <p class="card-text">
-                                        <span class="badge ${tienePedidosPendientes ? 'bg-warning text-dark' : 'bg-success'}">
-                                            ${tienePedidosPendientes ? 'Ocupada' : 'Libre'}
-                                        </span>
-                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="card-title mb-0">
+                                            ${tienePedidosPendientes ? '🟠' : '🟢'} ${mesa.nombre}
+                                        </h5>
+                                    </div>
                                     ${contenidoPedidos}
                                 </div>
                             </div>
@@ -490,16 +575,27 @@ function continuarAbrirGestionPedidos() {
             
             menuCompleto = data.menu;
             
-            // Generar HTML para cada categoría
+            // Definir el orden de las categorías
+            const ordenCategorias = ['combos', 'cafeteria', 'bebidas', 'salados', 'dulces'];
+            
+            // Generar HTML para cada categoría en el orden especificado
             let menuHTML = '';
-            for (const categoria in data.menu) {
-                const items = data.menu[categoria];
-                if (items.length === 0) continue;
+            ordenCategorias.forEach(categoria => {
+                const items = data.menu[categoria] || [];
+                if (items.length === 0) return;
+                
+                const emojisCategoria = {
+                    'combos': '🍽️',
+                    'cafeteria': '☕',
+                    'bebidas': '🥤',
+                    'salados': '🥪',
+                    'dulces': '🍰'
+                };
                 
                 menuHTML += `
                     <div class="card mb-3 categoria-menu" data-categoria="${categoria}">
                         <div class="card-header">
-                            <h6 class="mb-0">${obtenerEmojiCategoria(categoria)} ${categoria.toUpperCase()}</h6>
+                            <h6 class="mb-0">${emojisCategoria[categoria]} ${categoria.toUpperCase()}</h6>
                         </div>
                         <div class="card-body">
                             <div class="row row-cols-1 row-cols-md-2 g-2">
@@ -507,21 +603,13 @@ function continuarAbrirGestionPedidos() {
                 
                 items.forEach(item => {
                     if (item.disponible) {
-                        // Guardar tanto la versión original como la normalizada del nombre y descripción
-                        const nombreOriginal = item.nombre;
-                        const descripcionOriginal = (item.descripcion || []).join(', ');
-                        
                         menuHTML += `
-                            <div class="col item-menu" 
-                                 data-nombre="${nombreOriginal.toLowerCase()}"
-                                 data-nombre-norm="${normalizarTexto(nombreOriginal)}"
-                                 data-descripcion="${descripcionOriginal.toLowerCase()}"
-                                 data-descripcion-norm="${normalizarTexto(descripcionOriginal)}">
+                            <div class="col item-menu" data-nombre="${item.nombre.toLowerCase()}" data-descripcion="${(item.descripcion || []).join(' ').toLowerCase()}">
                                 <div class="card h-100">
                                     <div class="card-body p-2">
-                                        <h6 class="card-title mb-1">${nombreOriginal}</h6>
-                                        ${descripcionOriginal ? 
-                                            `<p class="card-text small text-muted mb-1">${descripcionOriginal}</p>` : ''}
+                                        <h6 class="card-title mb-1">${item.nombre}</h6>
+                                        ${item.descripcion && item.descripcion.length > 0 ? 
+                                            `<p class="card-text small text-muted mb-1">${item.descripcion.join(', ')}</p>` : ''}
                                         <p class="card-text">
                                             <small class="text-primary">$${item.precio}</small>
                                         </p>
@@ -540,7 +628,7 @@ function continuarAbrirGestionPedidos() {
                         </div>
                     </div>
                 `;
-            }
+            });
             
             console.log('HTML generado:', menuHTML);
             listaMenu.innerHTML = menuHTML;
@@ -590,7 +678,15 @@ function agregarPedido(platoId) {
 
 function seleccionarTipoCafe(tipo) {
     if (platoSeleccionado) {
-        agregarPedidoConNota(platoSeleccionado, tipo);
+        const emojis = {
+            'Café solo': '☕',
+            'Cortado': '☕',
+            'Lágrima': '🥛',
+            'Con leche': '☕🥛'
+        };
+        
+        const emoji = emojis[tipo] || '☕';
+        agregarPedidoConNota(platoSeleccionado, `${emoji} ${tipo}`);
         platoSeleccionado = null;
         bootstrap.Modal.getInstance(document.getElementById('tipoCafeModal')).hide();
     }

@@ -1,21 +1,17 @@
 @echo off
-chcp 65001 > nul
-echo ===================================
-echo Iniciando Sistema de Restaurante
-echo ===================================
+setlocal enabledelayedexpansion
 
 REM Verificar si Python está instalado
-python --version > nul 2>&1
+python --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python no está instalado.
     echo Por favor, instale Python 3.8 o superior desde https://www.python.org/downloads/
-    echo Asegúrese de marcar la opción "Add Python to PATH" durante la instalación.
     pause
     exit /b 1
 )
 
-REM Verificar si Git está instalado
-git --version > nul 2>&1
+REM Verificar si git está instalado
+git --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Git no está instalado.
     echo Por favor, instale Git desde https://git-scm.com/downloads
@@ -23,30 +19,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Verificar si es la primera ejecución (si no existe la carpeta .git)
-if not exist ".git" (
-    echo Primera ejecución detectada. Configurando repositorio Git...
-    git init
-    git remote add origin https://github.com/BladSector/Gabi.git
-    git fetch
-    git checkout -b main
-    git pull origin main
-)
-
-REM Verificar actualizaciones
-echo Verificando actualizaciones...
-git fetch origin
-git status | findstr "behind" > nul
-if not errorlevel 1 (
-    echo Se encontraron actualizaciones. Descargando...
-    git pull origin main
-    echo Actualizaciones instaladas correctamente.
-) else (
-    echo El sistema está actualizado.
-)
-
 REM Crear entorno virtual si no existe
-if not exist "venv" (
+if not exist venv (
     echo Creando entorno virtual...
     python -m venv venv
 )
@@ -54,33 +28,60 @@ if not exist "venv" (
 REM Activar entorno virtual
 call venv\Scripts\activate
 
-REM Configurar variables de entorno para UTF-8
-set PYTHONIOENCODING=utf-8
-set PYTHONUTF8=1
-
-REM Instalar/Actualizar dependencias
-echo Instalando/Actualizando dependencias...
-python -m pip install --upgrade pip
+REM Instalar/actualizar dependencias
 pip install -r requirements.txt
+
+REM Intentar actualizar desde GitHub
+echo.
+echo Buscando actualizaciones...
+git fetch origin main
+git rev-parse HEAD >temp1
+git rev-parse origin/main >temp2
+fc temp1 temp2 >nul
+if errorlevel 1 (
+    echo Se encontraron actualizaciones disponibles.
+    
+    REM Verificar contraseña si es necesario
+    python actualizar_sistema.py
+    if errorlevel 1 (
+        echo.
+        echo No se pudo verificar la identidad. La actualización ha sido cancelada.
+        del temp1 temp2
+        pause
+        exit /b 1
+    )
+    
+    REM Proceder con la actualización
+    git pull origin main
+    if errorlevel 1 (
+        echo.
+        echo Error al actualizar. Por favor, contacte al administrador.
+        del temp1 temp2
+        pause
+        exit /b 1
+    )
+    echo.
+    echo Sistema actualizado exitosamente.
+) else (
+    echo El sistema está actualizado.
+)
+
+del temp1 temp2
 
 REM Iniciar el sistema
 echo.
-echo ===================================
-echo Iniciando el servidor...
-echo ===================================
-echo.
-echo El sistema estará disponible en: http://localhost:5000
-echo.
-echo Para cerrar el sistema, presione Ctrl+C
-echo.
+echo Iniciando sistema...
+start /B python app.py
 
-REM Esperar 2 segundos para que el servidor inicie
-timeout /t 2 /nobreak > nul
+REM Esperar 2 segundos
+timeout /t 2 /nobreak >nul
 
 REM Abrir el navegador
 start http://localhost:5000
 
-REM Iniciar el servidor
-python app.py
+echo.
+echo Sistema iniciado correctamente.
+echo Para cerrar, presione Ctrl+C en esta ventana.
 
-pause 
+REM Mantener la ventana abierta
+cmd /k 
