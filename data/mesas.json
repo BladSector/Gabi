@@ -326,9 +326,64 @@
                 "hora": "2:13:22"
               }
             ]
+          },
+          {
+            "id": "1749276218658_13",
+            "nombre": "Agua",
+            "cantidad": 1,
+            "precio": 1800,
+            "precio_total": 1800,
+            "hora": "03:03",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749276218658_14",
+            "nombre": "Tostado",
+            "cantidad": 1,
+            "precio": 3800,
+            "precio_total": 3800,
+            "hora": "03:03",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749276218658_15",
+            "nombre": "Sándwich completo",
+            "cantidad": 1,
+            "precio": 4200,
+            "precio_total": 4200,
+            "hora": "03:03",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749276218658_16",
+            "nombre": "Avocado Toast",
+            "cantidad": 1,
+            "precio": 4800,
+            "precio_total": 4800,
+            "hora": "03:03",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
+          },
+          {
+            "id": "1749276218658_17",
+            "nombre": "Empanadas",
+            "cantidad": 1,
+            "precio": 1300,
+            "precio_total": 1300,
+            "hora": "03:03",
+            "estado_cocina": "🟡 Pendiente",
+            "mozo": "Mozo",
+            "cliente": "Mesa General"
           }
         ],
-        "contador_pedidos": 12
+        "contador_pedidos": 17
       },
       "comentarios_camarero": [],
       "notificaciones": []

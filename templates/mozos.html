@@ -8,7 +8,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Gestionar Pedidos - Mesa <span id="numeroMesaActual"></span></h5>
+                <h5 class="modal-title">🍽️ Gestionar Pedidos - Mesa <span id="numeroMesaActual"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -221,6 +221,18 @@ let clienteActual = null;
 let esTakeAway = false;
 
 function obtenerEmojiCategoria(nombrePlato) {
+    // Empanadas
+    const empanadas = ['Empanada', 'Empanadas'];
+    if (empanadas.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
+        return '🥟';
+    }
+    
+    // Sándwiches y tostados
+    const sandwiches = ['Sandwich', 'Sándwich', 'Tostado', 'Hamburguesa'];
+    if (sandwiches.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
+        return '🥪';
+    }
+
     // Productos de cafetería
     const productosCafeteria = ['Pocillo', 'Jarrito', 'Taza', 'Tazón', 'Café', 'Cortado', 'Lágrima', 'Capuccino', 'Latte'];
     if (productosCafeteria.some(producto => nombrePlato.toLowerCase().includes(producto.toLowerCase()))) {
@@ -232,17 +244,11 @@ function obtenerEmojiCategoria(nombrePlato) {
     if (bebidasFrias.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
         return '🥤';
     }
-    
+
     // Té y bebidas calientes
     const bebidasCalientes = ['Té', 'Chocolate'];
     if (bebidasCalientes.some(bebida => nombrePlato.toLowerCase().includes(bebida.toLowerCase()))) {
         return '🫖';
-    }
-    
-    // Sándwiches y tostados
-    const sandwiches = ['Sandwich', 'Sándwich', 'Tostado'];
-    if (sandwiches.some(item => nombrePlato.toLowerCase().includes(item.toLowerCase()))) {
-        return '🥪';
     }
     
     // Ensaladas
