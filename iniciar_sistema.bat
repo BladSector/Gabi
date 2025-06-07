@@ -68,6 +68,14 @@ if errorlevel 1 (
 
 del temp1 temp2
 
+REM Mostrar la IP del servidor
+echo.
+echo Direcciones IP disponibles:
+ipconfig | findstr "IPv4"
+echo.
+echo El servidor estará disponible en: http://[TU-IP]:5000
+echo Para acceder desde otros dispositivos en la red, usa la dirección IP de esta computadora
+
 REM Iniciar el sistema
 echo.
 echo Iniciando sistema...
@@ -76,11 +84,12 @@ start /B python app.py
 REM Esperar 2 segundos
 timeout /t 2 /nobreak >nul
 
-REM Abrir el navegador
+REM Abrir el navegador en localhost
 start http://localhost:5000
 
 echo.
 echo Sistema iniciado correctamente.
+echo Para acceder desde otros dispositivos en la red LAN, usa http://[TU-IP]:5000
 echo Para cerrar, presione Ctrl+C en esta ventana.
 
 REM Mantener la ventana abierta
