@@ -51,8 +51,11 @@ if errorlevel 1 (
         exit /b 1
     )
     
-    REM Proceder con la actualización
-    git pull origin main
+    REM Proceder con la actualización forzada
+    echo Descartando cambios locales y actualizando...
+    git reset --hard
+    git clean -fd
+    git pull origin main --force
     if errorlevel 1 (
         echo.
         echo Error al actualizar. Por favor, contacte al administrador.
