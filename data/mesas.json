@@ -637,28 +637,10 @@
   "9": [
     {
       "nombre": "Take Away Barra",
-      "estado": "ocupada",
+      "estado": "libre",
       "cliente_1": {
-        "pedidos": [
-          {
-            "id": "1749271662900_2",
-            "nombre": "Jarrito",
-            "cantidad": 1,
-            "precio": 2300,
-            "precio_total": 2300,
-            "hora": "01:47",
-            "estado_cocina": "🟡 Pendiente",
-            "mozo": "Mozo",
-            "cliente": "1",
-            "notas": [
-              {
-                "texto": "Tipo: ☕🥛 Café con leche (mitad café, mitad leche)",
-                "hora": "1:47:41"
-              }
-            ]
-          }
-        ],
-        "contador_pedidos": 2
+        "pedidos": [],
+        "contador_pedidos": 0
       },
       "comentarios_camarero": [],
       "notificaciones": []

@@ -5,14 +5,14 @@
           "id": 1,
           "nombre": "COMBO POSITIVO DULCE",
           "descripcion": ["Café taza o para llevar chico", "2 medialunas"],
-          "precio": 9000,
+          "precio": 4500,
           "disponible": true
         },
         {
           "id": 2,
           "nombre": "COMBO POSITIVO SALADO",
           "descripcion": ["Café taza o para llevar chico", "Tostado"],
-          "precio": 9000,
+          "precio": 6500,
           "disponible": true
         }
       ],
@@ -21,28 +21,28 @@
           "id": 3,
           "nombre": "Pocillo",
           "descripcion": [],
-          "precio": 2300,
+          "precio": 2500,
           "disponible": true
         },
         {
           "id": 4,
           "nombre": "Jarrito",
           "descripcion": [],
-          "precio": 2300,
+          "precio": 2500,
           "disponible": true
         },
         {
           "id": 5,
           "nombre": "Taza",
           "descripcion": [],
-          "precio": 2500,
+          "precio": 2800,
           "disponible": true
         },
         {
           "id": 6,
           "nombre": "Tazón",
           "descripcion": [],
-          "precio": 3000,
+          "precio": 3200,
           "disponible": true
         },
         {
@@ -63,40 +63,26 @@
           "id": 9,
           "nombre": "Café para llevar chico",
           "descripcion": [],
-          "precio": 2500,
+          "precio": 2800,
           "disponible": true
         },
         {
           "id": 10,
           "nombre": "Café para llevar grande",
           "descripcion": [],
-          "precio": 3000,
+          "precio": 3200,
           "disponible": true
         },
         {
           "id": 11,
           "nombre": "Capuccino",
           "descripcion": [],
-          "precio": 3000,
+          "precio": 3200,
           "disponible": true
         },
         {
           "id": 12,
-          "nombre": "Latte de vainilla",
-          "descripcion": [],
-          "precio": 3000,
-          "disponible": true
-        },
-        {
-          "id": 13,
-          "nombre": "Latte frío",
-          "descripcion": [],
-          "precio": 3000,
-          "disponible": true
-        },
-        {
-          "id": 14,
-          "nombre": "Chocolate",
+          "nombre": "Submarino",
           "descripcion": [],
           "precio": 4500,
           "disponible": true
@@ -114,14 +100,14 @@
           "id": 16,
           "nombre": "Exprimido",
           "descripcion": [],
-          "precio": 2800,
+          "precio": 3000,
           "disponible": true
         },
         {
           "id": 17,
-          "nombre": "Licuados",
+          "nombre": "Licuados de banana",
           "descripcion": [],
-          "precio": 3500,
+          "precio": 4000,
           "disponible": true
         },
         {
@@ -151,84 +137,77 @@
           "id": 21,
           "nombre": "Tostado",
           "descripcion": [],
-          "precio": 3800,
+          "precio": 4000,
           "disponible": true
         },
         {
           "id": 22,
           "nombre": "Tostado de queso y tomate",
           "descripcion": [],
-          "precio": 4200,
+          "precio": 4500,
           "disponible": true
         },
         {
           "id": 23,
           "nombre": "Sándwich completo",
           "descripcion": ["Jamón, queso, lechuga y tomate"],
-          "precio": 4200,
+          "precio": 4500,
           "disponible": true
         },
         {
           "id": 24,
           "nombre": "Sándwich positivo",
           "descripcion": ["Panceta, jamón crudo, queso, lechuga y tomate"],
-          "precio": 5000,
+          "precio": 6000,
           "disponible": true
         },
         {
           "id": 25,
           "nombre": "Avocado Toast",
           "descripcion": [],
-          "precio": 4800,
+          "precio": 6000,
           "disponible": true
         },
         {
           "id": 26,
           "nombre": "Ensalada cesar con pollo",
           "descripcion": ["Pollo, verdes, queso, croutones, salsa casera"],
-          "precio": 7000,
-          "disponible": true
-        },
-        {
-          "id": 27,
-          "nombre": "Ensalada primavera",
-          "descripcion": [],
-          "precio": 7000,
+          "precio": 8000,
           "disponible": true
         },
         {
           "id": 28,
           "nombre": "Wrap de pollo",
-          "descripcion": ["Pollo, morrón, espinaca, tomate, salsa"],
-          "precio": 7500,
+          "descripcion": ["Pollo, muzarella, espinaca, tomate seco, mostaza"],
+          "precio": 8000,
           "disponible": true
         },
         {
           "id": 29,
           "nombre": "Empanadas",
           "descripcion": [],
-          "precio": 1300,
+          "precio": 1500,
           "disponible": true
         },
         {
           "id": 30,
           "nombre": "Pizzetas",
           "descripcion": [],
-          "precio": 3000,
+          "precio": 3500,
           "disponible": true
         },
         {
           "id": 31,
           "nombre": "Tartis",
           "descripcion": [],
-          "precio": 4500,
+          "precio": 5000,
           "disponible": true
         },
         {
           "id": 32,
           "nombre": "Plato del día",
           "descripcion": ["Consultar"],
-          "precio": 8000,
+          "precio": 9000,
           "disponible": true
         }
       ],
@@ -237,7 +216,7 @@
           "id": 33,
           "nombre": "Medialuna",
           "descripcion": [],
-          "precio": 800,
+          "precio": 900,
           "disponible": true
         },
         {
@@ -251,49 +230,56 @@
           "id": 35,
           "nombre": "Budín",
           "descripcion": [],
-          "precio": 1000,
+          "precio": 1200,
           "disponible": true
         },
         {
           "id": 36,
           "nombre": "Cookie de avena",
           "descripcion": [],
-          "precio": 1200,
+          "precio": 1500,
           "disponible": true
         },
         {
           "id": 37,
           "nombre": "Mini delicias",
           "descripcion": ["Manzana, coco con DdL, lemon pie"],
-          "precio": 1000,
+          "precio": 1200,
           "disponible": true
         },
         {
           "id": 38,
           "nombre": "Alfajorcito",
           "descripcion": [],
-          "precio": 800,
+          "precio": 1000,
           "disponible": true
         },
         {
           "id": 39,
           "nombre": "Pastaflora / Torta de ricota",
           "descripcion": [],
-          "precio": 1700,
+          "precio": 2000,
           "disponible": true
         },
         {
           "id": 40,
           "nombre": "Brownie",
           "descripcion": [],
-          "precio": 1500,
+          "precio": 2000,
           "disponible": true
         },
         {
           "id": 41,
           "nombre": "Cookie",
           "descripcion": [],
-          "precio": 1200,
+          "precio": 1500,
+          "disponible": true
+        },
+        {
+          "id": 42,
+          "nombre": "Scon de queso",
+          "descripcion": [],
+          "precio": 1500,
           "disponible": true
         }
       ]
