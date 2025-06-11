@@ -30,3 +30,7 @@ data/*
 
 # Pero mantener las carpetas necesarias 
 !data/menu.json
+
+# Ignorar específicamente la carpeta __pycache__ en funciones
+funciones/__pycache__/
+funciones/**/__pycache__/
