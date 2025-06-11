@@ -5,18 +5,58 @@
 {% block content %}
 <div class="container-fluid">
     <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="mb-2">INFORME DE VENTAS DIARIAS</h4>
-                <div class="text-dark">
-                    <span id="fechaActual">📅 Fecha: --/--/----</span><br>
-                    <span id="horaActual">🕒 Hora: --:--</span>
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="mb-2">INFORME DE VENTAS</h4>
+                    <div class="text-dark">
+                        <span id="fechaActual">📅 Fecha: --/--/----</span><br>
+                        <span id="horaActual">🕒 Hora: --:--</span>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="/" class="btn btn-primary">Volver al Mapa</a>
                 </div>
             </div>
-            <div>
-                <a href="/" class="btn btn-primary">Volver al Mapa</a>
-            </div>
         </div>
+        
+        <!-- Formulario de Filtros -->
+        <div class="card-body border-bottom">
+            <form id="filtroForm" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo de Filtro</label>
+                    <select class="form-select" id="tipoFiltro">
+                        <option value="dia">Día</option>
+                        <option value="semana">Semana</option>
+                        <option value="mes">Mes</option>
+                        <option value="rango">Rango de Fechas</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro por Mes -->
+                <div class="col-md-3 filtro-mes d-none">
+                    <label class="form-label">Seleccionar Mes</label>
+                    <input type="month" class="form-control" id="mesSeleccionado">
+                </div>
+                
+                <!-- Filtro por Rango -->
+                <div class="col-md-3 filtro-rango d-none">
+                    <label class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="fechaInicio">
+                </div>
+                <div class="col-md-3 filtro-rango d-none">
+                    <label class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="fechaFin">
+                </div>
+                
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        Aplicar Filtro
+                    </button>
+                </div>
+            </form>
+        </div>
+        
         <div class="card-body">
             <div class="resumen-container bg-light p-3 rounded" style="font-family: 'Segoe UI', Arial, sans-serif;">
                 <div class="d-flex justify-content-between border-bottom border-dark py-2">
@@ -27,6 +67,7 @@
                     <table class="table table-bordered table-sm">
                         <thead class="table-dark">
                             <tr>
+                                <th>FECHA</th>
                                 <th>HORA</th>
                                 <th>PRODUCTO</th>
                                 <th>CANT</th>
@@ -83,8 +124,60 @@ function capitalizarMetodoPago(metodo) {
     return metodo.charAt(0).toUpperCase() + metodo.slice(1).toLowerCase();
 }
 
+function obtenerParametrosFiltro() {
+    const tipoFiltro = document.getElementById('tipoFiltro').value;
+    const fechaActual = new Date();
+    let params = new URLSearchParams();
+
+    switch(tipoFiltro) {
+        case 'dia':
+            params.append('fecha', fechaActual.toISOString().split('T')[0]);
+            break;
+        case 'semana':
+            const inicioSemana = new Date(fechaActual);
+            inicioSemana.setDate(fechaActual.getDate() - fechaActual.getDay());
+            const finSemana = new Date(inicioSemana);
+            finSemana.setDate(inicioSemana.getDate() + 6);
+            
+            params.append('fecha_inicio', inicioSemana.toISOString().split('T')[0]);
+            params.append('fecha_fin', finSemana.toISOString().split('T')[0]);
+            break;
+        case 'mes':
+            const mesSeleccionado = document.getElementById('mesSeleccionado').value;
+            if (mesSeleccionado) {
+                const [año, mes] = mesSeleccionado.split('-');
+                const ultimoDia = new Date(año, mes, 0).getDate();
+                params.append('fecha_inicio', `${mesSeleccionado}-01`);
+                params.append('fecha_fin', `${mesSeleccionado}-${ultimoDia}`);
+            }
+            break;
+        case 'rango':
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            if (fechaInicio && fechaFin) {
+                params.append('fecha_inicio', fechaInicio);
+                params.append('fecha_fin', fechaFin);
+            }
+            break;
+    }
+    
+    return params;
+}
+
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const [año, mes, dia] = fechaStr.split('-');
+    return `${dia}-${mes}-${año}`;
+}
+
+function formatearHora(horaStr) {
+    if (!horaStr) return '';
+    return horaStr.substring(0, 5); // Toma solo HH:MM
+}
+
 function actualizarResumen() {
-    fetch('/api/historial/diario')
+    const params = obtenerParametrosFiltro();
+    fetch(`/api/historial/diario?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -100,17 +193,21 @@ function actualizarResumen() {
                 
                 // Procesar cada ticket
                 historial.forEach(ticket => {
-                    // Procesar pedidos del ticket
+                    // Procesar pedidos por cliente
                     Object.values(ticket.pedidos_por_cliente).forEach(cliente => {
                         cliente.pedidos.forEach(pedido => {
                             // Agregar fila a la tabla
                             const fila = document.createElement('tr');
+                            const fecha = formatearFecha(ticket.fecha);
+                            const hora = formatearHora(ticket.hora);
+                            
                             fila.innerHTML = `
-                                <td>${ticket.hora.substring(0, 5)}</td>
-                                <td>${pedido.nombre}</td>
+                                <td>${fecha}</td>
+                                <td>${hora}</td>
+                                <td>${pedido.nombre}${pedido.notas ? `<br><small class="text-muted">${pedido.notas.map(n => n.texto).join(', ')}</small>` : ''}</td>
                                 <td class="text-center">${pedido.cantidad}</td>
-                                <td class="text-end">$${pedido.precio_unitario}</td>
-                                <td class="text-end">$${pedido.precio_total}</td>
+                                <td class="text-end">${pedido.cantidad > 1 ? `$${pedido.precio_unitario.toLocaleString()}` : '-'}</td>
+                                <td class="text-end">$${pedido.precio_total.toLocaleString()}</td>
                                 <td>${capitalizarMetodoPago(ticket.metodo_pago)}</td>
                             `;
                             tabla.appendChild(fila);
@@ -118,25 +215,31 @@ function actualizarResumen() {
                             // Actualizar totales
                             totalDia += pedido.precio_total;
                             cantidadPedidos += pedido.cantidad;
-                            
-                            // Actualizar totales por método de pago
-                            switch(ticket.metodo_pago.toLowerCase()) {
-                                case 'efectivo':
-                                    totalEfectivo += pedido.precio_total;
-                                    break;
-                                case 'tarjeta':
-                                    totalTarjeta += pedido.precio_total;
-                                    break;
-                            }
                         });
                     });
+                    
+                    // Actualizar totales por método de pago
+                    if (ticket.metodo_pago.toLowerCase() === 'efectivo') {
+                        totalEfectivo += ticket.total;
+                    } else if (ticket.metodo_pago.toLowerCase() === 'tarjeta') {
+                        totalTarjeta += ticket.total;
+                    }
                 });
                 
                 // Actualizar totales en la página
-                document.getElementById('resumenTotal').textContent = totalDia.toFixed(2);
+                document.getElementById('resumenTotal').textContent = totalDia.toLocaleString();
                 document.getElementById('resumenPedidos').textContent = cantidadPedidos;
-                document.getElementById('totalEfectivo').textContent = `${totalEfectivo.toFixed(2)} (${((totalEfectivo/totalDia)*100).toFixed(1)}%)`;
-                document.getElementById('totalTarjeta').textContent = `${totalTarjeta.toFixed(2)} (${((totalTarjeta/totalDia)*100).toFixed(1)}%)`;
+                
+                // Calcular porcentajes solo si hay ventas
+                if (totalDia > 0) {
+                    const porcentajeEfectivo = ((totalEfectivo/totalDia)*100).toFixed(1);
+                    const porcentajeTarjeta = ((totalTarjeta/totalDia)*100).toFixed(1);
+                    document.getElementById('totalEfectivo').textContent = `${totalEfectivo.toLocaleString()} (${porcentajeEfectivo}%)`;
+                    document.getElementById('totalTarjeta').textContent = `${totalTarjeta.toLocaleString()} (${porcentajeTarjeta}%)`;
+                } else {
+                    document.getElementById('totalEfectivo').textContent = '0 (0%)';
+                    document.getElementById('totalTarjeta').textContent = '0 (0%)';
+                }
             }
         })
         .catch(error => {
@@ -144,14 +247,45 @@ function actualizarResumen() {
         });
 }
 
+// Función para mostrar/ocultar campos según el tipo de filtro
+function actualizarCamposFiltro() {
+    const tipoFiltro = document.getElementById('tipoFiltro').value;
+    const filtroMes = document.querySelector('.filtro-mes');
+    const filtrosRango = document.querySelectorAll('.filtro-rango');
+    
+    // Ocultar todos los campos primero
+    filtroMes.classList.add('d-none');
+    filtrosRango.forEach(el => el.classList.add('d-none'));
+    
+    // Mostrar campos según el tipo de filtro
+    switch(tipoFiltro) {
+        case 'mes':
+            filtroMes.classList.remove('d-none');
+            break;
+        case 'rango':
+            filtrosRango.forEach(el => el.classList.remove('d-none'));
+            break;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar fecha y hora
     actualizarFechaHora();
-    // Actualizar la hora cada 2 segundos
     setInterval(actualizarFechaHora, 2000);
+    
+    // Event listeners para el formulario
+    document.getElementById('tipoFiltro').addEventListener('change', actualizarCamposFiltro);
+    document.getElementById('filtroForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        actualizarResumen();
+    });
+    
+    // Inicializar campos de filtro
+    actualizarCamposFiltro();
     
     // Cargar datos iniciales
     actualizarResumen();
+    
     // Actualizar datos cada 2 segundos
     setInterval(actualizarResumen, 2000);
 });

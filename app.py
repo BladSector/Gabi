@@ -3,7 +3,7 @@ from funciones.sistema_mesas import SistemaMesas
 from funciones.sistema_pedidos_mozos import SistemaPedidosMozos
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import shutil
 
 app = Flask(__name__)
@@ -24,11 +24,11 @@ def obtener_carpeta_fecha():
 def guardar_ticket(mesa_id, pedidos, total, metodo_pago):
     """Guarda un ticket en la carpeta de la fecha actual"""
     carpeta_fecha = obtener_carpeta_fecha()
-    fecha_hora = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    fecha_hora = datetime.now().strftime('%Y-%m-%d_%H-%M')
     
     # Crear contenido del ticket
     ticket = {
-        'fecha': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'fecha': datetime.now().strftime('%Y-%m-%d %H:%M'),
         'mesa_id': mesa_id,
         'pedidos': pedidos,
         'total': total,
@@ -334,27 +334,51 @@ def pagar_mesa(mesa_id):
 @app.route('/api/historial/diario')
 def obtener_historial_diario():
     try:
-        # Obtener la fecha actual
-        fecha_actual = datetime.now().strftime('%Y-%m-%d')
-        carpeta_fecha = os.path.join('data', 'tickets', fecha_actual)
+        # Obtener parámetros de fecha
+        fecha = request.args.get('fecha')
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
         
-        # Verificar si existe el archivo de historial
-        archivo_historial = os.path.join(carpeta_fecha, 'historial_diario.json')
-        if not os.path.exists(archivo_historial):
-            return jsonify({
-                'success': True,
-                'historial': []
-            })
+        # Si no hay parámetros, usar fecha actual
+        if not fecha and not fecha_inicio and not fecha_fin:
+            fecha = datetime.now().strftime('%Y-%m-%d')
         
-        # Leer el historial
-        with open(archivo_historial, 'r', encoding='utf-8') as f:
-            historial = json.load(f)
+        historial = []
+        
+        # Función para procesar archivos de una fecha específica
+        def procesar_fecha(fecha_str):
+            carpeta_fecha = os.path.join('data', 'tickets', fecha_str)
+            archivo_historial = os.path.join(carpeta_fecha, 'historial_diario.json')
+            
+            if os.path.exists(archivo_historial):
+                with open(archivo_historial, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                    # Agregar fecha a cada ticket
+                    for ticket in datos:
+                        ticket['fecha'] = fecha_str
+                    return datos
+            return []
+        
+        # Procesar según el tipo de filtro
+        if fecha:
+            # Filtro por día específico
+            historial.extend(procesar_fecha(fecha))
+        elif fecha_inicio and fecha_fin:
+            # Filtro por rango de fechas
+            fecha_actual = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            fecha_final = datetime.strptime(fecha_fin, '%Y-%m-%d')
+            
+            while fecha_actual <= fecha_final:
+                fecha_str = fecha_actual.strftime('%Y-%m-%d')
+                historial.extend(procesar_fecha(fecha_str))
+                fecha_actual += timedelta(days=1)
         
         return jsonify({
             'success': True,
             'historial': historial
         })
     except Exception as e:
+        print(f"Error al obtener historial: {str(e)}")  # Agregamos log para debug
         return jsonify({
             'success': False,
             'error': str(e)

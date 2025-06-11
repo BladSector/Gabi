@@ -1,3 +1,83 @@
+# Sistema de Gestión de Restaurante
+
+## Descripción
+Sistema de gestión para restaurante que permite el manejo de pedidos, mesas y generación de informes de ventas.
+
+## Características Principales
+
+### Gestión de Pedidos y Mesas
+- Control de estado de mesas
+- Registro de pedidos por mesa
+- Sistema de notificaciones para camareros
+- Gestión de pagos en efectivo y tarjeta
+
+### Informe de Ventas
+El sistema incluye un panel de resumen de ventas con las siguientes características:
+
+#### Filtros de Tiempo
+- Vista diaria (día actual)
+- Vista semanal (semana actual)
+- Vista mensual (mes seleccionado)
+- Rango de fechas personalizado
+
+#### Información Mostrada
+- Fecha (DD-MM-YYYY)
+- Hora (HH:MM)
+- Detalles del producto
+- Cantidad
+- Precio unitario (visible solo para cantidades > 1)
+- Total por pedido
+- Método de pago
+
+#### Totales y Estadísticas
+- Total de ventas del período
+- Cantidad total de pedidos
+- Total y porcentaje por método de pago:
+  - Efectivo
+  - Tarjeta
+
+#### Características Técnicas
+- Actualización automática cada 2 segundos
+- Formato de números con separadores de miles
+- Visualización de notas especiales por pedido
+- Interfaz responsiva
+
+## Actualizaciones Recientes
+
+### Versión Actual
+- Separación de fecha y hora en columnas independientes
+- Formato de fecha mejorado (DD-MM-YYYY)
+- Formato de hora simplificado (HH:MM)
+- Precio unitario visible solo para pedidos con cantidad > 1
+- Actualización en tiempo real (cada 2 segundos)
+- Mejoras en la visualización de totales y porcentajes
+
+### Estructura de Archivos
+```
+/data
+  /tickets
+    /{YYYY-MM-DD}/
+      - historial_diario.json
+      - ticket_mesaX_HHMMSS.json
+```
+
+## Tecnologías Utilizadas
+- Backend: Python con Flask
+- Frontend: HTML, JavaScript, Bootstrap
+- Almacenamiento: Sistema de archivos JSON
+
+## Uso
+1. Acceder a la vista principal de mozos (/)
+2. Para ver el resumen de ventas, acceder a (/resumen-diario)
+3. Utilizar los filtros para visualizar diferentes períodos
+4. Los datos se actualizarán automáticamente cada 2 segundos
+
+## Próximas Mejoras Planificadas
+- Exportación de informes a PDF/Excel
+- Filtros adicionales por producto o mozo
+- Gráficos estadísticos de ventas
+- Sistema de búsqueda avanzada
+
 # Sistema de Restaurante
 
 ## Requisitos Previos
@@ -74,7 +154,7 @@ Para hacer cambios en el sistema:
 
 # Sistema de Restaurante - Guía de Uso
 
-## 📱 Acceso a la Aplicación
+## 📱 Acceso a la Aplicación(pausado)
 1. Abre tu navegador web
 2. Ingresa la dirección: `https://tu-app.onrender.com`
 3. Verás la pantalla principal donde se ingresa el nombre del mozo o "admin" para poder cancelar y reinciar mesas con el mapa de mesas
@@ -107,7 +187,7 @@ Para hacer cambios en el sistema:
 3. Marca los pedidos que quieres enviar
 4. Haz clic en "Enviar a Cocina"
 
-### Seguimiento de Pedidos
+### Seguimiento de Pedidos(Actualizado y descartado)
 Los pedidos tienen diferentes estados:
 - ⏳ Pendiente: Recién creado
 - 👨‍🍳 En Preparación: Enviado a cocina
@@ -130,49 +210,40 @@ Los pedidos tienen diferentes estados:
 - Los tickets se guardan automáticamente
 - Se pueden encontrar en:
   - `data/tickets/[fecha]/` - Tickets en formato texto
-  - `data/historial/[fecha]/` - Registro de pagos en JSON
 
 ## ⚙️ Funciones Adicionales
 
-### Cancelar Pedidos (entrando como admin)
+### Cancelar Pedidos (como admin)
 1. Selecciona una mesa
 2. Encuentra el pedido a cancelar
 3. Haz clic en "Cancelar"
 4. Confirma la cancelación
 
-### Liberar Mesa (entrando como admin)
+### Liberar Mesa (como admin)
 1. Selecciona una mesa ocupada
 2. Haz clic en "Reiniciar Mesa"
 3. Confirma la acción
 4. La mesa volverá a estado libre (verde)
 
-## 💡 Consejos de Uso
-- Siempre verifica el estado de los pedidos antes de enviarlos a cocina
-- Asegúrate de marcar los pedidos como entregados cuando los sirvas
-- Revisa los tickets generados para confirmar que los pagos se registraron correctamente (servidor)
-- Mantén las mesas actualizadas para evitar confusiones
 
 ## 🔧 Solución de Problemas
 Si encuentras algún error:
 1. Verifica la conexión a internet 
 2. Asegúrate de que la mesa no esté bloqueada
 3. Intenta recargar la página 
-4. Si el problema persiste, contacta al administrador (BS developers)
+4. Si el problema persiste, contacta al administrador (BS developer)
 
 ## 📋 Flujo de Trabajo Recomendado
-1. Ocupar mesa cuando llegan los clientes
-2. Tomar pedidos y enviarlos a cocina
-3. Marcar pedidos como entregados al servirlos
+1. Tomar pedidos sobre una mesa
+3. Marcar pedidos
 4. Gestionar el pago cuando los clientes terminen
 5. Liberar la mesa después del pago (automático)
 
 ## 📞 Soporte
 Si necesitas ayuda adicional:
 - Contacta al administrador del sistema (BS developers)
-- Revisa la documentación técnica 
-- Consulta con el equipo de soporte (BS developers)
 
 ---
-BS developers - Santiago Tadeo López 
+BS developer - Santiago Tadeo López 
 *Última actualización: [Fecha actual]*
 
