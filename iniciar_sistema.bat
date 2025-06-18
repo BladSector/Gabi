@@ -175,18 +175,8 @@ if "%converted_from_zip%"=="false" (
         if errorlevel 1 (
             echo Se encontraron actualizaciones disponibles.
             
-            REM Verificar contraseña si es necesario
-            venv\Scripts\python.exe actualizar_sistema.py
-            if errorlevel 1 (
-                echo.
-                echo No se pudo verificar la identidad. La actualización ha sido cancelada.
-                del temp1 temp2 2>&1
-                pause
-                exit /b 1
-            )
-            
-            REM Proceder con la actualización forzada
-            echo Descartando cambios locales y actualizando...
+            REM Proceder con la actualización automática sin verificación
+            echo Actualizando sistema automáticamente...
             git reset --hard
             git clean -fd
             git pull origin main --force

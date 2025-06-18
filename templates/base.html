@@ -48,6 +48,11 @@
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <img src="/static/image.png" alt="Logo Positivo Café" style="max-height:60px; margin-right: 10px;">
             </a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-light btn-sm" onclick="mostrarBanner()" id="showBannerBtn" style="display: none;">
+                    📱 Mostrar URL de acceso
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -122,8 +127,17 @@
         // Ocultar el banner
         function ocultarBanner() {
             document.getElementById('accessBanner').style.display = 'none';
+            document.getElementById('showBannerBtn').style.display = 'inline-block';
             // Guardar preferencia en localStorage
             localStorage.setItem('hideAccessBanner', 'true');
+        }
+
+        // Mostrar el banner
+        function mostrarBanner() {
+            document.getElementById('accessBanner').style.display = 'block';
+            document.getElementById('showBannerBtn').style.display = 'none';
+            // Remover preferencia de localStorage
+            localStorage.removeItem('hideAccessBanner');
         }
 
         // Inicializar cuando se carga la página
@@ -131,7 +145,11 @@
             // Verificar si el usuario quiere ocultar el banner
             if (localStorage.getItem('hideAccessBanner') === 'true') {
                 document.getElementById('accessBanner').style.display = 'none';
-                return;
+                document.getElementById('showBannerBtn').style.display = 'inline-block';
+            } else {
+                // Mostrar el banner por defecto
+                document.getElementById('accessBanner').style.display = 'block';
+                document.getElementById('showBannerBtn').style.display = 'none';
             }
 
             // Obtener y mostrar la URL de acceso real
