@@ -60,14 +60,11 @@
     <div class="access-banner" id="accessBanner">
         <div class="container-fluid">
             <div class="row align-items-center">
-                <div class="col-md-8">
+                <div class="col-md-10">
                     <strong>📱 Para acceder desde otros dispositivos:</strong> 
                     <span id="accessUrl">Cargando...</span>
                 </div>
-                <div class="col-md-4 text-end">
-                    <button class="btn copy-btn btn-sm" onclick="copiarURL()">
-                        📋 Copiar URL
-                    </button>
+                <div class="col-md-2 text-end">
                     <button class="btn copy-btn btn-sm" onclick="ocultarBanner()">
                         ✕ Ocultar
                     </button>
@@ -102,26 +99,6 @@
                 const port = window.location.port;
                 return `http://${hostname}:${port}`;
             }
-        }
-
-        // Copiar URL al portapapeles
-        function copiarURL() {
-            const url = document.getElementById('accessUrl').textContent;
-            navigator.clipboard.writeText(url).then(() => {
-                // Mostrar confirmación temporal
-                const btn = event.target;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ Copiado!';
-                btn.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                }, 2000);
-            }).catch(err => {
-                console.error('Error al copiar: ', err);
-                alert('Error al copiar la URL');
-            });
         }
 
         // Ocultar el banner
