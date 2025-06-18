@@ -60,6 +60,15 @@ if not exist .git (
         exit /b 1
     )
     
+    echo Configurando identidad Git temporal...
+    git config user.email "sistema@restaurante.local"
+    git config user.name "Sistema Restaurante"
+    if errorlevel 1 (
+        echo ERROR: No se pudo configurar la identidad Git.
+        pause
+        exit /b 1
+    )
+    
     echo Creando commit inicial...
     git commit -m "Instalación inicial desde ZIP"
     if errorlevel 1 (
