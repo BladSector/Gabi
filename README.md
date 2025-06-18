@@ -57,24 +57,24 @@ El sistema incluye un panel de resumen de ventas con las siguientes característ
 ## Instrucciones de Instalación
 
 ### Método Simple (Recomendado)
-1. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
-2. El script se encargará de:
+1. Clone el repositorio con una terminal (git bash) en su computadora: `git clone https://github.com/BladSector/Gabi.git` 
+2. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
+3. El script se encargará de:
    - Verificar que Python y Git estén instalados
    - Descargar la última versión del código desde GitHub
-   - Crear un entorno virtual (falta configurar)
+   - Crear un entorno virtual 
    - Instalar todas las dependencias necesarias
    - Iniciar el sistema
 
+**Nota importante:** Si descargaste el proyecto como archivo ZIP (en lugar de clonarlo con Git), el script `iniciar_sistema.bat` no funcionará correctamente al crear el entorno virtual automáticamente. En ese caso, necesitas seguir el método manual que se describe más abajo.
+
 ### Método Manual
-Si prefiere instalar manualmente:
-1. Abra una terminal en esta carpeta
-2. Clone el repositorio: `git clone https://github.com/BladSector/Gabi.git`
-3. Cree un entorno virtual: `python -m venv venv`
-4. Active el entorno virtual:
+1. Abra una terminal (git bash) en esta carpeta
+2. Cree un entorno virtual: `python -m venv venv`
+3. Active el entorno virtual:
    - Windows: `venv\Scripts\activate`
    - Linux/Mac: `source venv/bin/activate`
-5. Instale las dependencias: `pip install -r requirements.txt`
-6. Inicie el sistema: `python app.py`
+4. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
 
 ## Actualizaciones
 - El sistema verificará automáticamente si hay actualizaciones cada vez que se inicie
