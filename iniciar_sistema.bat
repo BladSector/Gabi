@@ -23,13 +23,61 @@ REM Crear entorno virtual si no existe
 if not exist venv (
     echo Creando entorno virtual...
     python -m venv venv
+    if errorlevel 1 (
+        echo ERROR: No se pudo crear el entorno virtual.
+        pause
+        exit /b 1
+    )
+    echo Entorno virtual creado exitosamente.
 )
 
-REM Activar entorno virtual
-call venv\Scripts\activate
+REM Verificar que el entorno virtual existe
+if not exist venv\Scripts\activate.bat (
+    echo ERROR: El entorno virtual no se creó correctamente.
+    echo Eliminando entorno virtual corrupto...
+    rmdir /s /q venv
+    echo Creando nuevo entorno virtual...
+    python -m venv venv
+    if errorlevel 1 (
+        echo ERROR: No se pudo crear el entorno virtual.
+        pause
+        exit /b 1
+    )
+)
+
+REM Activar entorno virtual con mejor manejo de errores
+echo Activando entorno virtual...
+call venv\Scripts\activate.bat
+if errorlevel 1 (
+    echo ERROR: No se pudo activar el entorno virtual.
+    echo Verificando permisos y estructura...
+    if not exist venv\Scripts\python.exe (
+        echo ERROR: Python no está disponible en el entorno virtual.
+        echo Recreando entorno virtual...
+        rmdir /s /q venv
+        python -m venv venv
+        call venv\Scripts\activate.bat
+    )
+)
+
+REM Verificar que la activación fue exitosa
+venv\Scripts\python.exe --version >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: El entorno virtual no está funcionando correctamente.
+    pause
+    exit /b 1
+)
+
+echo Entorno virtual activado correctamente.
 
 REM Instalar/actualizar dependencias
-pip install -r requirements.txt
+echo Instalando dependencias...
+venv\Scripts\pip.exe install -r requirements.txt
+if errorlevel 1 (
+    echo ERROR: No se pudieron instalar las dependencias.
+    pause
+    exit /b 1
+)
 
 REM Intentar actualizar desde GitHub
 echo.
@@ -42,7 +90,7 @@ if errorlevel 1 (
     echo Se encontraron actualizaciones disponibles.
     
     REM Verificar contraseña si es necesario
-    python actualizar_sistema.py
+    venv\Scripts\python.exe actualizar_sistema.py
     if errorlevel 1 (
         echo.
         echo No se pudo verificar la identidad. La actualización ha sido cancelada.
@@ -82,7 +130,7 @@ echo Para acceder desde otros dispositivos en la red, usa la dirección IP de es
 REM Iniciar el sistema
 echo.
 echo Iniciando sistema...
-start /B python app.py
+start /B venv\Scripts\python.exe app.py
 
 REM Esperar 2 segundos
 timeout /t 2 /nobreak >nul
