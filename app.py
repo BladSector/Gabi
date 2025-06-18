@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime, timedelta
 import shutil
+import socket
 
 app = Flask(__name__)
 sistema_mesas = SistemaMesas()
@@ -55,6 +56,18 @@ def guardar_ticket(mesa_id, pedidos, total, metodo_pago):
         json.dump(historial, f, ensure_ascii=False, indent=2)
     
     return ruta_ticket
+
+def obtener_ip_servidor():
+    """Obtiene la IP del servidor para acceso desde otros dispositivos"""
+    try:
+        # Crear un socket temporal para obtener la IP local
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
 
 @app.route('/')
 def index():
@@ -387,6 +400,15 @@ def obtener_historial_diario():
 @app.route('/resumen-diario')
 def resumen_diario():
     return render_template('resumen_diario.html')
+
+@app.route('/api/server-info')
+def server_info():
+    """Devuelve información del servidor incluyendo la IP"""
+    return jsonify({
+        'success': True,
+        'ip': obtener_ip_servidor(),
+        'port': 5000
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 

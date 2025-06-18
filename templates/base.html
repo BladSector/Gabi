@@ -18,6 +18,28 @@
         .badge {
             font-size: 0.9em;
         }
+        .access-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .access-banner .btn {
+            font-size: 12px;
+            padding: 4px 8px;
+            margin-left: 10px;
+        }
+        .access-banner .copy-btn {
+            background-color: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+        }
+        .access-banner .copy-btn:hover {
+            background-color: rgba(255,255,255,0.3);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -29,12 +51,100 @@
         </div>
     </nav>
 
+    <!-- Banner de acceso para otros dispositivos -->
+    <div class="access-banner" id="accessBanner">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <strong>📱 Para acceder desde otros dispositivos:</strong> 
+                    <span id="accessUrl">Cargando...</span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn copy-btn btn-sm" onclick="copiarURL()">
+                        📋 Copiar URL
+                    </button>
+                    <button class="btn copy-btn btn-sm" onclick="ocultarBanner()">
+                        ✕ Ocultar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container-fluid py-4">
         {% block content %}{% endblock %}
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Obtener la IP del servidor desde la API
+        async function obtenerIPServidor() {
+            try {
+                const response = await fetch('/api/server-info');
+                const data = await response.json();
+                
+                if (data.success) {
+                    return `http://${data.ip}:${data.port}`;
+                } else {
+                    throw new Error('No se pudo obtener la información del servidor');
+                }
+            } catch (error) {
+                console.error('Error al obtener IP del servidor:', error);
+                // Fallback: usar window.location
+                const hostname = window.location.hostname;
+                const port = window.location.port;
+                return `http://${hostname}:${port}`;
+            }
+        }
+
+        // Copiar URL al portapapeles
+        function copiarURL() {
+            const url = document.getElementById('accessUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                // Mostrar confirmación temporal
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copiado!';
+                btn.style.backgroundColor = 'rgba(40, 167, 69, 0.8)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.backgroundColor = 'rgba(255,255,255,0.2)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+                alert('Error al copiar la URL');
+            });
+        }
+
+        // Ocultar el banner
+        function ocultarBanner() {
+            document.getElementById('accessBanner').style.display = 'none';
+            // Guardar preferencia en localStorage
+            localStorage.setItem('hideAccessBanner', 'true');
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar si el usuario quiere ocultar el banner
+            if (localStorage.getItem('hideAccessBanner') === 'true') {
+                document.getElementById('accessBanner').style.display = 'none';
+                return;
+            }
+
+            // Obtener y mostrar la URL de acceso real
+            try {
+                const accessUrl = await obtenerIPServidor();
+                document.getElementById('accessUrl').textContent = accessUrl;
+            } catch (error) {
+                console.error('Error al obtener URL de acceso:', error);
+                document.getElementById('accessUrl').textContent = 'Error al obtener IP';
+            }
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html> 

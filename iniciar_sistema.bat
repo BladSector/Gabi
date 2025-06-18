@@ -214,9 +214,30 @@ REM Mostrar la IP del servidor
 echo.
 echo Direcciones IP disponibles:
 ipconfig | findstr "IPv4"
+
+REM Detectar la IP principal (la primera que no sea 127.0.0.1)
+for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr "IPv4"') do (
+    set "ip=%%i"
+    set "ip=!ip: =!"
+    if not "!ip!"=="127.0.0.1" (
+        if not defined main_ip (
+            set "main_ip=!ip!"
+        )
+    )
+)
+
 echo.
-echo El servidor estará disponible en: http://[TU-IP]:5000
-echo Para acceder desde otros dispositivos en la red, usa la dirección IP de esta computadora
+echo ========================================
+echo    SISTEMA INICIADO CORRECTAMENTE
+echo ========================================
+echo.
+echo Para acceder desde esta computadora:
+echo    http://localhost:5000
+echo.
+echo Para acceder desde otros dispositivos (celulares, tablets, otras PCs):
+echo    http://!main_ip!:5000
+echo.
+echo ========================================
 
 REM Iniciar el sistema
 echo.
@@ -231,7 +252,6 @@ start http://localhost:5000
 
 echo.
 echo Sistema iniciado correctamente.
-echo Para acceder desde otros dispositivos en la red LAN, usa http://[TU-IP]:5000
 echo Para cerrar, presione Ctrl+C en esta ventana.
 
 REM Mantener la ventana abierta
