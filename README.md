@@ -57,27 +57,39 @@ El sistema incluye un panel de resumen de ventas con las siguientes característ
 ## Instrucciones de Instalación
 
 ### Método Simple (Recomendado)
-1. Clone el repositorio con una terminal (git bash) en su computadora: `git clone https://github.com/BladSector/Gabi.git` 
+1. **Opción A - Clonar con Git (Recomendado):**
+   - Clone el repositorio con una terminal (git bash) en su computadora: `git clone https://github.com/BladSector/Gabi.git`
+   
+   **O**
+   
+   **Opción B - Descargar como ZIP:**
+   - Descargue el proyecto como archivo ZIP desde GitHub
+   - Extraiga el archivo ZIP en su computadora
+
 2. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
-3. El script se encargará de:
+3. El script se encargará automáticamente de:
    - Verificar que Python y Git estén instalados
+   - **Si es descarga ZIP:** Convertir automáticamente a repositorio Git para actualizaciones
    - Descargar la última versión del código desde GitHub
    - Crear un entorno virtual 
    - Instalar todas las dependencias necesarias
    - Iniciar el sistema
 
-**Nota importante:** Si descargaste el proyecto como archivo ZIP (en lugar de clonarlo con Git), el script `iniciar_sistema.bat` no funcionará correctamente al crear el entorno virtual automáticamente. En ese caso, necesitas seguir el método manual que se describe más abajo.
+**Nota importante:** Tanto las descargas ZIP como los clones Git ahora funcionan automáticamente. El script detectará el tipo de instalación y se encargará de todo el proceso de configuración.
 
 ### Método Manual
+Si prefiere instalar manualmente o tiene problemas con el método automático:
 1. Abra una terminal (git bash) en esta carpeta
 2. Cree un entorno virtual: `python -m venv venv`
 3. Active el entorno virtual:
    - Windows: `venv\Scripts\activate`
    - Linux/Mac: `source venv/bin/activate`
-4. Simplemente haga doble clic en el archivo `iniciar_sistema.bat`
+4. Instale las dependencias: `pip install -r requirements.txt`
+5. Inicie el sistema: `python app.py`
 
 ## Actualizaciones
 - El sistema verificará automáticamente si hay actualizaciones cada vez que se inicie
+- **Funciona tanto para descargas ZIP como para clones Git** gracias a la conversión automática
 - Para actualizar manualmente en cualquier momento:
   1. Cierre el sistema si está en ejecución
   2. Vuelva a ejecutar `iniciar_sistema.bat`

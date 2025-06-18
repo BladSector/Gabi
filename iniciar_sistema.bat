@@ -15,8 +15,76 @@ git --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Git no está instalado.
     echo Por favor, instale Git desde https://git-scm.com/downloads
+    echo Git es necesario para las actualizaciones automáticas del sistema.
     pause
     exit /b 1
+)
+
+REM Detectar si es una descarga ZIP (sin carpeta .git) y convertirla en repositorio Git
+if not exist .git (
+    echo.
+    echo DETECTADO: Descarga ZIP - Convirtiendo a repositorio Git para actualizaciones
+    echo.
+    echo Inicializando repositorio Git local...
+    git init
+    if errorlevel 1 (
+        echo ERROR: No se pudo inicializar el repositorio Git.
+        pause
+        exit /b 1
+    )
+    
+    echo Agregando repositorio remoto...
+    git remote add origin https://github.com/BladSector/Gabi.git
+    if errorlevel 1 (
+        echo ERROR: No se pudo agregar el repositorio remoto.
+        pause
+        exit /b 1
+    )
+    
+    echo Configurando rama principal...
+    git branch -M main
+    if errorlevel 1 (
+        echo ERROR: No se pudo configurar la rama principal.
+        pause
+        exit /b 1
+    )
+    
+    echo Agregando archivos al repositorio...
+    git add .
+    if errorlevel 1 (
+        echo ERROR: No se pudieron agregar los archivos al repositorio.
+        pause
+        exit /b 1
+    )
+    
+    echo Creando commit inicial...
+    git commit -m "Instalación inicial desde ZIP"
+    if errorlevel 1 (
+        echo ERROR: No se pudo crear el commit inicial.
+        pause
+        exit /b 1
+    )
+    
+    echo Descargando última versión desde GitHub...
+    git fetch origin main
+    if errorlevel 1 (
+        echo ERROR: No se pudo conectar con GitHub.
+        echo Verifique su conexión a internet.
+        pause
+        exit /b 1
+    )
+    
+    echo Actualizando a la última versión...
+    git reset --hard origin/main
+    if errorlevel 1 (
+        echo ERROR: No se pudo actualizar a la última versión.
+        pause
+        exit /b 1
+    )
+    
+    echo.
+    echo ¡Conversión exitosa! Ahora puede recibir actualizaciones automáticas.
+    echo.
 )
 
 REM Crear entorno virtual si no existe
@@ -79,7 +147,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Intentar actualizar desde GitHub
+REM Buscar actualizaciones (ahora funciona tanto para ZIP como para Git)
 echo.
 echo Buscando actualizaciones...
 git fetch origin main
