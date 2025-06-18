@@ -20,6 +20,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Variable para controlar si se convirtió de ZIP
+set "converted_from_zip=false"
+
 REM Detectar si es una descarga ZIP (sin carpeta .git) y convertirla en repositorio Git
 if not exist .git (
     echo.
@@ -85,6 +88,7 @@ if not exist .git (
     echo.
     echo ¡Conversión exitosa! Ahora puede recibir actualizaciones automáticas.
     echo.
+    set "converted_from_zip=true"
 )
 
 REM Crear entorno virtual si no existe
@@ -147,45 +151,55 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Buscar actualizaciones (ahora funciona tanto para ZIP como para Git)
-echo.
-echo Buscando actualizaciones...
-git fetch origin main
-git rev-parse HEAD >temp1
-git rev-parse origin/main >temp2
-fc temp1 temp2 >nul
-if errorlevel 1 (
-    echo Se encontraron actualizaciones disponibles.
-    
-    REM Verificar contraseña si es necesario
-    venv\Scripts\python.exe actualizar_sistema.py
-    if errorlevel 1 (
-        echo.
-        echo No se pudo verificar la identidad. La actualización ha sido cancelada.
-        del temp1 temp2
-        pause
-        exit /b 1
-    )
-    
-    REM Proceder con la actualización forzada
-    echo Descartando cambios locales y actualizando...
-    git reset --hard
-    git clean -fd
-    git pull origin main --force
-    if errorlevel 1 (
-        echo.
-        echo Error al actualizar. Por favor, contacte al administrador.
-        del temp1 temp2
-        pause
-        exit /b 1
-    )
+REM Buscar actualizaciones solo si no se acaba de convertir de ZIP
+if "%converted_from_zip%"=="false" (
     echo.
-    echo Sistema actualizado exitosamente.
+    echo Buscando actualizaciones...
+    git fetch origin main >nul 2>&1
+    if errorlevel 1 (
+        echo ERROR: No se pudo conectar con GitHub para buscar actualizaciones.
+        echo Continuando sin verificar actualizaciones...
+    ) else (
+        git rev-parse HEAD >temp1 2>&1
+        git rev-parse origin/main >temp2 2>&1
+        fc temp1 temp2 >nul 2>&1
+        if errorlevel 1 (
+            echo Se encontraron actualizaciones disponibles.
+            
+            REM Verificar contraseña si es necesario
+            venv\Scripts\python.exe actualizar_sistema.py
+            if errorlevel 1 (
+                echo.
+                echo No se pudo verificar la identidad. La actualización ha sido cancelada.
+                del temp1 temp2 2>&1
+                pause
+                exit /b 1
+            )
+            
+            REM Proceder con la actualización forzada
+            echo Descartando cambios locales y actualizando...
+            git reset --hard
+            git clean -fd
+            git pull origin main --force
+            if errorlevel 1 (
+                echo.
+                echo Error al actualizar. Por favor, contacte al administrador.
+                del temp1 temp2 2>&1
+                pause
+                exit /b 1
+            )
+            echo.
+            echo Sistema actualizado exitosamente.
+        ) else (
+            echo El sistema está actualizado.
+        )
+        
+        del temp1 temp2 2>&1
+    )
 ) else (
-    echo El sistema está actualizado.
+    echo.
+    echo Sistema recién convertido desde ZIP - ya está actualizado.
 )
-
-del temp1 temp2
 
 REM Mostrar la IP del servidor
 echo.
